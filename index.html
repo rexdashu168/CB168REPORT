@@ -3,65 +3,99 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>投資研報助手 Pro</title>
+<title>投資研報助手 Ultimate</title>
 <style>
     :root {
-        --primary: #6366f1;
-        --secondary: #10b981; /* 新增產業功能的輔助色：綠色 */
-        --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        --gradient-ind: linear-gradient(135deg, #10b981 0%, #059669 100%); /* 產業百科專用漸層 */
+        /* 主色系定義 */
+        --primary: #6366f1; /* 研報紫 */
+        --ind-color: #10b981; /* 產業綠 */
+        --news-color: #f59e0b; /* 外電橘 */
+        
+        /* 漸層背景 */
+        --grad-main: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        --grad-ind: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --grad-news: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        
         --bg: #f5f5f7; --text: #1f2937; --text-light: #6b7280;
         --card: #ffffff; --shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
-    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 65px; -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 70px; -webkit-tap-highlight-color: transparent; }
     
     /* 視圖控制 */
     .view { display: none; animation: fade 0.25s ease; min-height: 100vh; }
     .view.active { display: block; }
     @keyframes fade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Header & Inputs */
-    .header { background: var(--gradient); color: #fff; padding: 16px; position: sticky; top: 0; z-index: 10; display: flex; align-items: center; box-shadow: var(--shadow); }
-    .header.industry-mode { background: var(--gradient-ind); } /* 產業模式變色 */
+    /* Header */
+    .header { background: var(--grad-main); color: #fff; padding: 16px; position: sticky; top: 0; z-index: 10; display: flex; align-items: center; box-shadow: var(--shadow); transition: background 0.3s; }
+    .header.ind-mode { background: var(--grad-ind); }
+    .header.news-mode { background: var(--grad-news); }
+    
     .header h1 { margin: 0; font-size: 18px; flex-grow: 1; text-align: center; font-weight: 600; }
     .btn-icon { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; padding: 0 10px; }
 
-    .search-box { background: var(--card); padding: 12px; margin: 12px; border-radius: 12px; box-shadow: var(--shadow); }
-    .input-field { width: 100%; padding: 10px; border: 2px solid #eee; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; transition: 0.3s; }
-    .input-field:focus { border-color: var(--primary); }
-
-    /* 首頁 Grid (調整為適應 5 個方塊) */
-    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 12px 12px; }
-    /* 讓第一個方塊 (產業百科) 橫跨兩欄，突顯功能 */
-    .card-btn.full-width { grid-column: span 2; background: linear-gradient(to right, #fff, #f0fdf4); border-left: 5px solid var(--secondary); }
+    /* 首頁網格佈局 */
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 16px; }
     
-    .card-btn { background: var(--card); padding: 16px; border-radius: 12px; text-align: center; box-shadow: var(--shadow); cursor: pointer; transition: transform 0.2s; position: relative; overflow: hidden; }
-    .card-btn:active { transform: scale(0.98); }
-    .card-icon { font-size: 24px; margin-bottom: 8px; display: block; }
-
-    /* 列表與報告卡片 */
-    .list { padding: 0 12px; }
-    .item { background: var(--card); padding: 16px; border-radius: 12px; margin-bottom: 10px; box-shadow: var(--shadow); cursor: pointer; }
-    .item-head { display: flex; justify-content: space-between; margin-bottom: 4px; font-weight: 600; }
-    .tags { margin-top: 8px; }
-    .tag { display: inline-block; background: #ede9fe; color: var(--primary); padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-right: 4px; }
+    /* 大方塊樣式 (產業 & 外電) */
+    .big-card {
+        grid-column: span 2; /* 橫跨兩欄 */
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    .big-card::after { content: '>'; position: absolute; right: 20px; color: #ccc; font-weight: bold; }
     
-    /* === 新增：產業身分證卡片樣式 === */
-    .ind-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 16px; border: 1px solid #e5e7eb; }
-    .ind-header { background: #f0fdf4; padding: 16px; border-bottom: 1px solid #d1fae5; display: flex; justify-content: space-between; align-items: center; }
-    .ind-title { font-size: 18px; font-weight: 700; color: #065f46; }
-    .ind-code { background: #059669; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px; }
-    .ind-body { padding: 16px; }
-    .ind-row { margin-bottom: 12px; display: flex; align-items: baseline; }
-    .ind-label { width: 70px; font-size: 13px; color: #6b7280; font-weight: 500; flex-shrink: 0; }
-    .ind-val { font-size: 14px; color: #1f2937; line-height: 1.5; }
-    .ind-tag { display: inline-block; background: #d1fae5; color: #047857; padding: 4px 10px; border-radius: 20px; font-size: 12px; margin-right: 6px; font-weight: 500; }
-    .position-badge { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; display: inline-block; margin-top: 4px; }
+    /* 小方塊樣式 (研報過濾) */
+    .small-card {
+        background: #fff;
+        padding: 16px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    .icon-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 4px; }
 
+    /* === 外電快訊卡片樣式 === */
+    .news-card { background: #fff; border-radius: 12px; margin-bottom: 16px; box-shadow: var(--shadow); overflow: hidden; border-left: 4px solid var(--news-color); }
+    .news-header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    .news-source { font-weight: bold; color: #d97706; display: flex; align-items: center; gap: 6px; font-size: 13px; }
+    .news-time { font-size: 12px; color: #999; }
+    .news-body { padding: 16px; }
+    .news-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; line-height: 1.4; }
+    .news-content { font-size: 14px; color: #4b5563; line-height: 1.6; margin-bottom: 12px; }
+    .news-footer { padding: 0 16px 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+    
+    .impact-tag { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    .impact-bull { background: #fee2e2; color: #dc2626; } /* 利多紅 */
+    .impact-bear { background: #d1fae5; color: #065f46; } /* 利空綠 (台股習慣) */
+
+    /* === 產業卡片樣式 (沿用) === */
+    .ind-card { background: #fff; border-radius: 16px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid #e5e7eb; }
+    .ind-header { background: #ecfdf5; padding: 16px; border-bottom: 1px solid #d1fae5; display: flex; justify-content: space-between; align-items: center; }
+    
+    /* === 共用樣式 === */
+    .search-box { background: #fff; padding: 12px; margin: 12px; border-radius: 12px; box-shadow: var(--shadow); }
+    .input-field { width: 100%; padding: 10px; border: 2px solid #eee; border-radius: 8px; box-sizing: border-box; outline: none; }
+    
     /* 底部導航 */
     .nav { position: fixed; bottom: 0; width: 100%; background: #fff; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 8px 0; z-index: 100; }
     .nav-item { text-align: center; color: var(--text-light); font-size: 10px; cursor: pointer; flex: 1; }
     .nav-item.active { color: var(--primary); }
+    .nav-icon { font-size: 22px; display: block; margin-bottom: 2px; }
 </style>
 </head>
 <body>
@@ -69,236 +103,170 @@
 <div id="home" class="view active">
     <div class="header">
         <div style="width:20px"></div>
-        <h1>投資研報 Pro</h1>
+        <h1>投資研報助手</h1>
         <div style="width:20px"></div>
     </div>
 
-    <div class="grid" style="margin-top: 20px;">
-        <div class="card-btn full-width" onclick="app.go('industrySearch')">
-            <div style="display:flex; align-items:center; justify-content:center; gap:10px;">
-                <span style="font-size:28px;">🏭</span>
-                <div style="text-align:left;">
-                    <div style="font-weight:bold; font-size:16px; color:#065f46;">產業百科</div>
-                    <div style="font-size:11px; color:#059669;">查地位、找供應鏈</div>
-                </div>
+    <div class="grid">
+        <div class="big-card" onclick="app.go('industryView')" style="border-left: 5px solid var(--ind-color);">
+            <div style="font-size:32px;">🏭</div>
+            <div>
+                <div style="font-size:16px; font-weight:bold; color:#065f46;">產業百科</div>
+                <div style="font-size:12px; color:#6b7280;">供應鏈地位、競爭優勢查詢</div>
             </div>
         </div>
 
-        <div class="card-btn" onclick="app.filter('new')"><span class="card-icon">📝</span>最新報告</div>
-        <div class="card-btn" onclick="app.filter('high')"><span class="card-icon">🔥</span>高重要性</div>
-        <div class="card-btn" onclick="app.filter('ai')"><span class="card-icon">🤖</span>AI 專區</div>
-        <div class="card-btn" onclick="app.filter('all')"><span class="card-icon">📂</span>所有報告</div>
+        <div class="big-card" onclick="app.go('newsView')" style="border-left: 5px solid var(--news-color);">
+            <div style="font-size:32px;">⚡</div>
+            <div>
+                <div style="font-size:16px; font-weight:bold; color:#d97706;">外電快訊</div>
+                <div style="font-size:12px; color:#6b7280;">Bloomberg、投行即時觀點</div>
+            </div>
+        </div>
+
+        <div class="small-card" onclick="app.filterReports('new')">
+            <div class="icon-circle" style="background:#e0e7ff; color:#4338ca;">📝</div>
+            <div style="font-size:13px;">最新研報</div>
+        </div>
+        <div class="small-card" onclick="app.filterReports('high')">
+            <div class="icon-circle" style="background:#fee2e2; color:#dc2626;">🔥</div>
+            <div style="font-size:13px;">高重要性</div>
+        </div>
+        <div class="small-card" onclick="app.filterReports('ai')">
+            <div class="icon-circle" style="background:#dcfce7; color:#15803d;">🤖</div>
+            <div style="font-size:13px;">AI 專區</div>
+        </div>
+        <div class="small-card" onclick="app.filterReports('all')">
+            <div class="icon-circle" style="background:#f3f4f6; color:#374151;">📂</div>
+            <div style="font-size:13px;">所有報告</div>
+        </div>
     </div>
 
-    <div class="list">
-        <h3 style="margin: 10px 4px; font-size: 16px;">精選摘要</h3>
-        <div id="home-list"></div>
+    <div style="padding: 0 16px;">
+        <h3 style="margin: 10px 4px; font-size: 16px; color:#444;">📌 最新摘要</h3>
+        <div id="home-report-list"></div>
     </div>
 </div>
 
-<div id="list" class="view">
+<div id="industryView" class="view">
+    <div class="header ind-mode">
+        <button class="btn-icon" onclick="app.back()">←</button>
+        <h1>產業地位查詢</h1>
+        <div style="width:40px"></div>
+    </div>
+    <div class="search-box">
+        <input type="text" class="input-field" placeholder="輸入代號 (如 2330) 或名稱..." onkeyup="app.searchIndustry(this.value)">
+    </div>
+    <div id="ind-result" style="padding: 0 16px;">
+        <div style="text-align:center; padding:40px; color:#999;">
+            請輸入關鍵字查詢<br>例如：台積電、伺服器
+        </div>
+    </div>
+</div>
+
+<div id="newsView" class="view">
+    <div class="header news-mode">
+        <button class="btn-icon" onclick="app.back()">←</button>
+        <h1>外電綜合報導</h1>
+        <div style="width:40px"></div>
+    </div>
+    <div id="news-list" style="padding: 16px;">
+        </div>
+</div>
+
+<div id="reportListView" class="view">
     <div class="header">
         <button class="btn-icon" onclick="app.back()">←</button>
         <h1 id="list-title">報告列表</h1>
         <div style="width:40px"></div>
     </div>
-    <div class="list" id="full-list" style="padding-top: 16px;"></div>
+    <div id="report-list-container" style="padding: 16px;"></div>
 </div>
 
-<div id="detail" class="view">
+<div id="reportDetailView" class="view">
     <div class="header">
         <button class="btn-icon" onclick="app.back()">←</button>
-        <h1 id="detail-title">詳情</h1>
+        <h1>報告詳情</h1>
         <div style="width:40px"></div>
     </div>
-    <div id="detail-content" style="padding:20px; background:#fff;"></div>
-</div>
-
-<div id="industrySearch" class="view">
-    <div class="header industry-mode">
-        <button class="btn-icon" onclick="app.back()">←</button>
-        <h1>產業地位查詢</h1>
-        <div style="width:40px"></div>
-    </div>
-    <div class="search-box" style="border-top: 4px solid var(--secondary);">
-        <input type="text" class="input-field" placeholder="輸入代號 (如 2330) 或名稱..." id="indInput" onkeyup="app.searchIndustry(this.value)">
-        <div style="margin-top:8px; font-size:12px; color:#666;">
-            熱門搜尋：<span style="color:#059669; cursor:pointer;" onclick="app.fillSearch('台積電')">台積電</span>、
-            <span style="color:#059669; cursor:pointer;" onclick="app.fillSearch('鴻海')">鴻海</span>、
-            <span style="color:#059669; cursor:pointer;" onclick="app.fillSearch('AI')">AI</span>
-        </div>
-    </div>
-    <div class="list" id="industry-result">
-        <div style="text-align:center; padding:40px; color:#9ca3af;">
-            <div style="font-size:40px; margin-bottom:10px;">🏢</div>
-            請輸入公司名稱或代號<br>查看其產業地位與分類
-        </div>
-    </div>
+    <div id="detail-content" style="padding:20px; background:#fff; min-height:90vh;"></div>
 </div>
 
 <div class="nav">
-    <div class="nav-item active" onclick="app.go('home')"><span style="font-size:20px">🏠</span><div>首頁</div></div>
-    <div class="nav-item" onclick="app.go('industrySearch')"><span style="font-size:20px">🏭</span><div>查產業</div></div>
-    <div class="nav-item"><span style="font-size:20px">👤</span><div>我的</div></div>
+    <div class="nav-item active" onclick="app.go('home')"><span class="nav-icon">🏠</span>首頁</div>
+    <div class="nav-item" onclick="app.go('industryView')"><span class="nav-icon">🏭</span>產業</div>
+    <div class="nav-item" onclick="app.go('newsView')"><span class="nav-icon">⚡</span>外電</div>
+    <div class="nav-item"><span class="nav-icon">👤</span>我的</div>
 </div>
 
 <script>
-// === 1. 報告資料庫 (DB) ===
-const REPORT_DB = [
-    { id: 1, date: "2025/11/11", company: "華碩", code: "2357", broker: "元大投顧", importance: "high", summary: "3Q25創新高，AI伺服器占比20%。", tags: ["PC", "AI"] },
-    { id: 2, date: "2025/11/12", company: "台積電", code: "2330", broker: "摩根大通", importance: "high", summary: "3奈米產能滿載，CoWoS擴產。", tags: ["半導體"] },
-    { id: 3, date: "2025/11/10", company: "廣達", code: "2382", broker: "凱基證券", importance: "high", summary: "GB200整機櫃明年Q1大量出貨。", tags: ["伺服器"] },
-    { id: 4, date: "2025/11/09", company: "聯發科", code: "2454", broker: "高盛", importance: "normal", summary: "天璣9400反應佳。", tags: ["IC設計"] },
-    { id: 5, date: "2025/11/08", company: "緯穎", code: "6669", broker: "野村", importance: "normal", summary: "等待新晶片轉換期。", tags: ["伺服器"] }
+// === 資料庫 ===
+
+// 1. 研報資料
+const DB_REPORTS = [
+    { id: 1, company: "華碩", code: "2357", summary: "3Q25創新高，AI伺服器占比20%。", importance: "high", tags: ["AI", "PC"], detail: "內容..." },
+    { id: 2, company: "台積電", code: "2330", summary: "3奈米產能滿載，CoWoS擴產。", importance: "high", tags: ["半導體"], detail: "內容..." },
+    { id: 3, company: "廣達", code: "2382", summary: "GB200整機櫃明年Q1出貨。", importance: "high", tags: ["AI", "伺服器"], detail: "內容..." },
+    { id: 4, company: "聯發科", code: "2454", summary: "天璣9400反應佳。", importance: "normal", tags: ["手機"], detail: "內容..." }
 ];
 
-// === 2. 新增：產業分類資料庫 (Industry DB) ===
-// 模擬您上傳的 CSV 結構：代號, 名稱, 主產業, 細分, 地位, 說明
-const INDUSTRY_DB = [
+// 2. 產業資料
+const DB_INDUSTRY = [
+    { code: "2330", name: "台積電", main: "半導體", position: "全球晶圓代工龍頭", desc: "先進製程獨霸，AI晶片獨家供應商。" },
+    { code: "2317", name: "鴻海", main: "組裝", position: "電子代工龍頭", desc: "取得NVL72首批出貨權，AI伺服器組裝巨頭。" },
+    { code: "2357", name: "華碩", main: "PC品牌", position: "板卡龍頭", desc: "電競品牌強勢，積極切入AI伺服器。" }
+];
+
+// 3. 外電資料 (模擬 CSV 內容)
+const DB_NEWS = [
     { 
-        code: "2330", name: "台積電", main: "半導體", sub: "晶圓代工", 
-        position: "全球晶圓代工龍頭 (市占>60%)", 
-        desc: "擁有全球最先進製程技術 (3nm/2nm)，為Apple、NVIDIA、AMD獨家供應商。CoWoS封裝產能為AI晶片關鍵瓶頸。" 
+        source: "Bloomberg", time: "10:30", 
+        title: "NVIDIA GB200 供應鏈最新狀況更新", 
+        content: "供應鏈指出 B200 晶片良率問題已解決，預計 12 月開始小量出貨。鴻海 (2317) 與 廣達 (2382) 維持首波出貨地位。",
+        impact: "bull", // bull=利多, bear=利空
+        related: ["2317", "2382", "NVDA"]
     },
     { 
-        code: "2357", name: "華碩", main: "電腦及周邊", sub: "品牌PC/主機板", 
-        position: "全球主機板龍頭 / 電競品牌第一", 
-        desc: "ROG品牌在電競市場具高溢價力。近年積極切入AI伺服器，與輝達關係緊密。" 
+        source: "Morgan Stanley", time: "09:15", 
+        title: "記憶體產業：寒冬將至還是短暫調整？", 
+        content: "大摩發布最新報告，認為消費性電子需求疲軟，DRAM 價格恐在 Q4 見頂。下調 美光 及 韓系記憶體廠評等。",
+        impact: "bear",
+        related: ["2408", "3260"]
     },
     { 
-        code: "2317", name: "鴻海", main: "電子組裝", sub: "EMS代工", 
-        position: "全球最大電子代工廠", 
-        desc: "iPhone主要組裝廠。獨家取得NVIDIA GB200 NVL72 首批出貨權，轉型為AI伺服器組裝巨頭。" 
-    },
-    { 
-        code: "2454", name: "聯發科", main: "半導體", sub: "IC設計", 
-        position: "全球手機晶片出貨量第一", 
-        desc: "天璣系列挑戰高通旗艦地位。積極佈局WiFi 7與車用晶片(Dimensity Auto)。" 
-    },
-    { 
-        code: "2382", name: "廣達", main: "電腦及周邊", sub: "NB代工/伺服器", 
-        position: "NB代工龍頭 / AI伺服器領先者", 
-        desc: "與Google、Meta、Amazon合作多年。目前為GB200主要供應商之一，技術能力強。" 
-    },
-    { 
-        code: "3008", name: "大立光", main: "光電", sub: "光學鏡頭", 
-        position: "手機鏡頭技術領導者", 
-        desc: "擁有最高階塑膠鏡片專利，為iPhone潛望式鏡頭主要供應商。" 
-    },
-    { 
-        code: "6669", name: "緯穎", main: "電腦及周邊", sub: "伺服器", 
-        position: "純雲端資料中心供應商", 
-        desc: "緯創子公司，專注於CSP直接銷售 (ODM Direct)，大客戶為Meta與Microsoft。" 
+        source: "Reuters", time: "08:45", 
+        title: "台積電亞利桑那廠良率超越台灣廠", 
+        content: "台積電美國廠 4nm 製程良率優於預期，甚至略高於台灣南科廠。主要受惠於設備較新及自動化程度高。",
+        impact: "bull",
+        related: ["2330"]
     }
 ];
 
-// === 3. 核心邏輯 ===
+// === 應用邏輯 ===
 const app = {
     history: ['home'],
 
     init: function() {
-        // 渲染首頁報告摘要
-        const el = document.getElementById('home-list');
-        el.innerHTML = REPORT_DB.slice(0, 3).map(d => `
-            <div class="item" onclick="alert('請至列表頁查看詳情')">
-                <div class="item-head">${d.company} <small>${d.code}</small></div>
-                <div style="font-size:12px; color:#666">${d.summary}</div>
+        // 初始化首頁摘要
+        const list = document.getElementById('home-report-list');
+        list.innerHTML = DB_REPORTS.slice(0, 2).map(d => `
+            <div style="background:#fff; padding:12px; border-radius:8px; margin-bottom:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <div style="font-weight:bold;">${d.company} <span style="color:#999; font-weight:normal;">${d.code}</span></div>
+                <div style="font-size:13px; color:#666;">${d.summary}</div>
             </div>
         `).join('');
-    },
-
-    // --- 報告相關功能 ---
-    filter: function(type) {
-        let res = REPORT_DB;
-        if (type === 'new') res = REPORT_DB.slice(0,3);
-        else if (type === 'high') res = REPORT_DB.filter(x => x.importance === 'high');
-        else if (type === 'ai') res = REPORT_DB.filter(x => JSON.stringify(x).includes('AI'));
         
-        document.getElementById('list-title').innerText = type === 'all' ? '所有報告' : '篩選結果';
-        
-        const html = res.map(item => `
-            <div class="item">
-                <div class="item-head">
-                    <span>${item.company} <small style="color:#888">${item.code}</small></span>
-                    <span>${item.date.slice(5)}</span>
-                </div>
-                <div style="font-size:13px; color:#4b5563; margin-bottom:8px;">${item.summary}</div>
-                <div class="tags">${item.tags.map(t => `<span class="tag">#${t}</span>`).join('')}</div>
-            </div>
-        `).join('');
-        document.getElementById('full-list').innerHTML = html;
-        this.go('list');
+        // 初始化外電列表
+        this.renderNews();
     },
 
-    // --- 新增：產業查詢功能 ---
-    fillSearch: function(txt) {
-        document.getElementById('indInput').value = txt;
-        this.searchIndustry(txt);
-    },
-
-    searchIndustry: function(val) {
-        const container = document.getElementById('industry-result');
-        if (!val) { container.innerHTML = ''; return; }
-
-        const key = val.toLowerCase();
-        // 搜尋邏輯：比對代號、名稱、主產業、細分產業
-        const res = INDUSTRY_DB.filter(d => 
-            d.code.includes(key) || 
-            d.name.includes(key) || 
-            d.main.includes(key) ||
-            d.sub.includes(key)
-        );
-
-        if (res.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">查無資料，請嘗試其他關鍵字</div>';
-            return;
-        }
-
-        // 渲染卡片結果
-        container.innerHTML = res.map(d => `
-            <div class="ind-card">
-                <div class="ind-header">
-                    <div>
-                        <span class="ind-title">${d.name}</span>
-                        <span class="ind-code">${d.code}</span>
-                    </div>
-                    <div style="text-align:right">
-                        <span class="ind-tag" style="background:#fff; border:1px solid #10b981;">${d.main}</span>
-                    </div>
-                </div>
-                <div class="ind-body">
-                    <div class="ind-row">
-                        <div class="ind-label">細分產業</div>
-                        <div class="ind-val"><span class="ind-tag">${d.sub}</span></div>
-                    </div>
-                    <div class="ind-row">
-                        <div class="ind-label">產業地位</div>
-                        <div class="ind-val">
-                            <span class="position-badge">🏆 ${d.position}</span>
-                        </div>
-                    </div>
-                    <div class="ind-row" style="display:block">
-                        <div class="ind-label" style="margin-bottom:4px">重點說明</div>
-                        <div class="ind-val" style="background:#f9fafb; padding:10px; border-radius:8px; color:#4b5563;">
-                            ${d.desc}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    },
-
-    // --- 導航與共用 ---
+    // --- 導航系統 ---
     go: function(viewId) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
         if(this.history[this.history.length-1] !== viewId) this.history.push(viewId);
         window.scrollTo(0,0);
-        
-        // 處理底部導航狀態
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        if (viewId === 'home') document.querySelectorAll('.nav-item')[0].classList.add('active');
-        if (viewId === 'industrySearch') document.querySelectorAll('.nav-item')[1].classList.add('active');
+        this.updateNav(viewId);
     },
 
     back: function() {
@@ -308,6 +276,83 @@ const app = {
         } else {
             this.go('home');
         }
+    },
+
+    updateNav: function(viewId) {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        const map = { 'home':0, 'industryView':1, 'newsView':2 };
+        if(map[viewId] !== undefined) document.querySelectorAll('.nav-item')[map[viewId]].classList.add('active');
+    },
+
+    // --- 外電功能 (Render) ---
+    renderNews: function() {
+        const container = document.getElementById('news-list');
+        container.innerHTML = DB_NEWS.map(item => `
+            <div class="news-card">
+                <div class="news-header">
+                    <div class="news-source">
+                        <span>📰</span> ${item.source}
+                    </div>
+                    <div class="news-time">${item.time}</div>
+                </div>
+                <div class="news-body">
+                    <div class="news-title">${item.title}</div>
+                    <div class="news-content">${item.content}</div>
+                    <div class="news-footer">
+                        <span class="impact-tag ${item.impact === 'bull' ? 'impact-bull' : 'impact-bear'}">
+                            ${item.impact === 'bull' ? '▲ 看多/正面' : '▼ 看空/負面'}
+                        </span>
+                        ${item.related.map(tag => `<span style="background:#f3f4f6; padding:2px 6px; border-radius:4px; font-size:11px; color:#666;">#${tag}</span>`).join('')}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    // --- 產業搜尋功能 ---
+    searchIndustry: function(val) {
+        const container = document.getElementById('ind-result');
+        if(!val) { container.innerHTML = ''; return; }
+        const res = DB_INDUSTRY.filter(d => (d.name+d.code+d.main).includes(val));
+        
+        if(res.length === 0) { container.innerHTML = '<div style="text-align:center; padding:20px; color:#999">查無資料</div>'; return; }
+
+        container.innerHTML = res.map(d => `
+            <div class="ind-card">
+                <div class="ind-header">
+                    <span style="font-weight:bold; color:#065f46; font-size:18px;">${d.name} ${d.code}</span>
+                    <span style="background:#10b981; color:#fff; padding:2px 8px; border-radius:10px; font-size:12px;">${d.main}</span>
+                </div>
+                <div style="padding:16px;">
+                    <div style="margin-bottom:8px;"><strong>🏆 地位：</strong>${d.position}</div>
+                    <div style="font-size:14px; color:#555; line-height:1.5;">${d.desc}</div>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    // --- 研報過濾 ---
+    filterReports: function(type) {
+        let res = DB_REPORTS;
+        if(type === 'high') res = DB_REPORTS.filter(x => x.importance === 'high');
+        else if(type === 'ai') res = DB_REPORTS.filter(x => x.tags.includes('AI'));
+        
+        const html = res.map(d => `
+            <div class="small-card" style="flex-direction:column; align-items:start; text-align:left; margin-bottom:10px; width:auto;" onclick="app.showReportDetail(${d.id})">
+                <div style="font-weight:bold;">${d.company} (${d.code})</div>
+                <div style="color:#666; font-size:13px; margin:4px 0;">${d.summary}</div>
+                <div style="font-size:12px; color:#primary;">${d.tags.map(t=>'#'+t).join(' ')}</div>
+            </div>
+        `).join('');
+        
+        document.getElementById('report-list-container').innerHTML = html;
+        document.getElementById('list-title').innerText = type === 'all' ? '所有報告' : '篩選結果';
+        this.go('reportListView');
+    },
+
+    showReportDetail: function(id) {
+        document.getElementById('detail-content').innerText = "這裡是詳細報告內容...";
+        this.go('reportDetailView');
     }
 };
 
