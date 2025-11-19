@@ -3,432 +3,503 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rex 投資研報 (經典版)</title>
+<title>Rex 投資決策中樞 (Grid Pro)</title>
 <style>
-    /* === 1. 回歸原始 Export.pdf 設計風格 === */
     :root {
-        --primary: #6366f1; /* 經典紫 */
-        --primary-grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        --bg-color: #f5f5f7;
-        --text-main: #1a1a1a;
-        --text-sub: #6b7280;
+        /* === 專業色票 (Professional Palette) === */
+        --bg-body: #f0f2f5;       /* 淺灰背景，襯托白卡片 */
         --card-bg: #ffffff;
-        --shadow: 0 4px 12px rgba(0,0,0,0.08);
+        
+        --primary: #4f46e5;       /* 品牌主色 (Indigo) */
+        --text-main: #111827;     /* 深黑字 */
+        --text-sub: #6b7280;      /* 次要灰字 */
+        
+        /* 功能色 */
+        --c-report: #6366f1;      /* 研報紫 */
+        --c-news: #f59e0b;        /* 外電橘 */
+        --c-ind: #10b981;         /* 產業綠 */
+        --c-alert: #ef4444;       /* 警示紅 */
+
+        /* 格子系統參數 */
+        --gap: 20px;
+        --radius: 24px;           /* 大圓角，現代感 */
+        --shadow: 0 4px 20px rgba(0,0,0,0.04);
     }
 
     body {
-        font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif;
-        background: var(--bg-color);
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang TC", sans-serif;
+        background: var(--bg-body);
         color: var(--text-main);
-        line-height: 1.6;
         margin: 0;
-        padding-bottom: 80px; /* 底部導航空間 */
-        -webkit-tap-highlight-color: transparent;
+        padding-bottom: 100px;
+        -webkit-font-smoothing: antialiased;
     }
 
-    /* 視圖切換 */
-    .view { display: none; min-height: 100vh; }
-    .view.active { display: block; animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-    /* === Header (原始紫色漸層) === */
-    .top-header {
-        background: var(--primary-grad);
-        color: white;
-        padding: 20px 20px 30px; /* 增加下方空間給圓弧效果 */
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        border-bottom-left-radius: 24px;
-        border-bottom-right-radius: 24px;
-    }
-    .header-content { text-align: center; }
-    .header-title { font-size: 22px; font-weight: 700; margin: 0; }
-    .header-subtitle { font-size: 13px; opacity: 0.9; margin-top: 4px; }
-    
-    .back-btn {
-        position: absolute; top: 20px; left: 20px;
-        background: rgba(255,255,255,0.2); border: none; color: white;
-        width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
-        display: flex; align-items: center; justify-content: center; font-size: 18px;
-    }
-
-    /* === 搜尋區塊 (原始白色懸浮卡片) === */
-    .search-section {
-        background: white;
+    /* === 版面容器 (Symmetrical Container) === */
+    .app-container {
+        max-width: 1000px; /* 限制最大寬度，確保桌機版對稱 */
+        margin: 0 auto;
         padding: 20px;
-        margin: -20px 20px 20px; /* 向上重疊 Header */
-        border-radius: 16px;
-        box-shadow: var(--shadow);
+    }
+
+    /* 視圖動畫 */
+    .view { display: none; animation: fadeScale 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    .view.active { display: block; }
+    @keyframes fadeScale { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+    /* === 1. 對稱式 Header === */
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
         position: relative;
-        z-index: 1001;
     }
-    .search-box { position: relative; margin-bottom: 16px; }
+    .header h1 { font-size: 24px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.5px; }
+    .header p { font-size: 13px; color: var(--text-sub); margin: 0; }
+    
+    .btn-back {
+        position: absolute; left: 0; top: 5px;
+        background: white; border: 1px solid #e5e7eb;
+        width: 40px; height: 40px; border-radius: 50%;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        font-size: 18px; box-shadow: var(--shadow); transition: 0.2s;
+    }
+    .btn-back:hover { transform: scale(1.05); }
+
+    /* === 2. 搜尋中樞 (Centered Search) === */
+    .search-bar-container {
+        background: var(--card-bg);
+        padding: 10px;
+        border-radius: 50px; /* 全圓角 */
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        max-width: 600px;
+        margin: 0 auto 30px; /* 置中 */
+        border: 1px solid rgba(0,0,0,0.05);
+    }
     .search-input {
-        width: 100%; padding: 14px 40px 14px 16px;
-        border: 2px solid #e5e7eb; border-radius: 12px;
-        font-size: 15px; outline: none; box-sizing: border-box;
-        background: #f9fafb; transition: all 0.3s;
+        flex: 1; border: none; outline: none; font-size: 16px; padding: 10px 20px;
+        background: transparent;
     }
-    .search-input:focus { border-color: var(--primary); background: white; }
-    
-    /* Filter Chips (原始膠囊樣式) */
-    .filter-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
-    .filter-chip {
-        flex-shrink: 0; padding: 6px 14px;
-        background: #f3f4f6; border: 1px solid #e5e7eb;
-        border-radius: 20px; font-size: 13px; color: #6b7280;
-        cursor: pointer; transition: all 0.3s;
+    .filter-group { display: flex; gap: 8px; padding-right: 10px; }
+    .f-chip {
+        font-size: 12px; padding: 6px 16px; border-radius: 20px; background: #f3f4f6;
+        color: var(--text-sub); cursor: pointer; transition: 0.2s; font-weight: 600;
     }
-    .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .f-chip.active { background: var(--text-main); color: white; }
 
-    /* === 功能網格 (原始 2x2 方塊) === */
-    .feature-grid {
-        display: grid; grid-template-columns: repeat(2, 1fr);
-        gap: 16px; padding: 0 20px 20px;
+    /* === 3. Bento Grid (核心網格系統) === */
+    .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* 自動響應，最少300px寬 */
+        gap: var(--gap);
     }
-    .feature-card {
-        background: white; padding: 20px; border-radius: 16px;
-        text-align: center; cursor: pointer;
-        box-shadow: var(--shadow); transition: transform 0.2s;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        height: 110px;
-    }
-    .feature-card:active { transform: scale(0.98); }
-    .feature-icon { font-size: 32px; margin-bottom: 8px; }
-    .feature-title { font-size: 15px; font-weight: 600; color: #1f2937; }
-    .feature-count { font-size: 12px; color: #9ca3af; margin-top: 4px; }
 
-    /* === 列表樣式 (原始設計) === */
-    .report-list { padding: 0 20px; }
-    .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .list-title { font-size: 18px; font-weight: 600; color: #1f2937; margin: 0; }
-    
-    .report-item {
-        background: white; padding: 16px; border-radius: 12px;
-        margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        cursor: pointer; transition: transform 0.2s;
+    /* 方塊卡片基礎樣式 */
+    .bento-card {
+        background: var(--card-bg);
+        border-radius: var(--radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 180px; /* 固定高度讓格子整齊 */
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.03);
     }
-    .report-item:active { transform: scale(0.99); }
-    .ri-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .ri-name { font-size: 16px; font-weight: 600; color: #1f2937; }
-    .ri-code { font-size: 14px; color: #9ca3af; margin-left: 4px; }
-    .ri-date { font-size: 12px; color: #9ca3af; }
-    .ri-summary { font-size: 14px; color: #4b5563; line-height: 1.5; margin: 8px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .ri-tags { display: flex; gap: 6px; }
-    .tag { background: #ede9fe; color: var(--primary); padding: 3px 8px; border-radius: 8px; font-size: 11px; font-weight: 500; }
-    .tag.high { background: #fee2e2; color: #dc2626; }
+    .bento-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
 
-    /* === 詳情頁 (Chat UI 但整合進原始容器) === */
-    .detail-container { padding: 20px; max-width: 800px; margin: 0 auto; }
-    
-    /* 對話氣泡樣式 (微調以適應原始風格) */
-    .chat-bubble {
-        background: white; border-radius: 16px; padding: 20px;
-        margin-bottom: 16px; box-shadow: var(--shadow);
-        border-left: 4px solid transparent; /* 預留 */
-        opacity: 0; animation: slideUp 0.4s forwards;
+    /* 裝飾背景圖標 (半透明大圖標) */
+    .bento-bg-icon {
+        position: absolute; right: -20px; bottom: -20px;
+        font-size: 120px; opacity: 0.05; pointer-events: none;
     }
-    @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
-    
-    .bubble-meta { border-left-color: var(--primary); }
-    .bubble-rex { border: 1px solid #fcd34d; background: #fffbeb; }
-    
-    .cb-title { font-size: 13px; font-weight: 700; color: #6b7280; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .cb-content { font-size: 15px; color: #374151; line-height: 1.7; white-space: pre-line; }
 
-    /* === 產業百科與外電卡片 (適配原始風格) === */
-    .info-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
-    .ic-head { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f3f4f6; }
-    .ic-title { font-size: 16px; font-weight: 700; color: #1f2937; }
-    .ic-badge { font-size: 12px; padding: 2px 8px; border-radius: 10px; }
+    /* 方塊個別主題 */
+    .bc-report { border-top: 6px solid var(--c-report); }
+    .bc-news { border-top: 6px solid var(--c-news); }
+    .bc-ind { border-top: 6px solid var(--c-ind); }
+    .bc-high { border-top: 6px solid var(--c-alert); }
 
-    /* === 底部導航 (原始樣式) === */
-    .bottom-nav {
-        position: fixed; bottom: 0; left: 0; right: 0;
-        background: white; border-top: 1px solid #e5e7eb;
-        display: flex; justify-content: space-around; padding: 10px 0;
-        z-index: 1000;
+    .bc-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .bc-desc { font-size: 13px; color: var(--text-sub); line-height: 1.5; }
+    .bc-stat { margin-top: auto; font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+    
+    /* === 4. 列表網格 (List Grid) === */
+    /* 這是讓列表也呈現方塊感的關鍵 */
+    .list-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* 響應式格子 */
+        gap: 16px;
     }
-    .nav-item { display: flex; flex-direction: column; align-items: center; color: #9ca3af; font-size: 11px; cursor: pointer; }
-    .nav-item.active { color: var(--primary); }
-    .nav-icon { font-size: 24px; margin-bottom: 2px; }
+
+    .data-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: 0.2s;
+    }
+    .data-card:hover { border-color: var(--primary); }
+
+    /* 列表內元件 */
+    .dc-head { display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center; }
+    .dc-title { font-size: 16px; font-weight: 700; }
+    .dc-tag { font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
+    .tag-buy { background: #fee2e2; color: #dc2626; }
+    .tag-hold { background: #ffedd5; color: #c2410c; }
+    .tag-cat { background: #e0f2fe; color: #0369a1; }
+
+    .dc-body { font-size: 14px; color: #4b5563; line-height: 1.6; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
+    .dc-foot { font-size: 12px; color: #9ca3af; display: flex; gap: 10px; border-top: 1px solid #f3f4f6; padding-top: 10px; }
+
+    /* === 5. 詳情頁 (Chat UI Block Style) === */
+    /* 將 Ellis 對話流改成 "資訊積木" */
+    .chat-stack { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    
+    .info-block {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        opacity: 0; animation: slideIn 0.4s forwards;
+        border-left: 4px solid transparent;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .ib-meta { border-left-color: var(--primary); }
+    .ib-rex { background: #fffbeb; border: 1px solid #fbbf24; }
+    
+    .ib-head { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin-bottom: 12px; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+    .ib-content { font-size: 16px; line-height: 1.8; color: #374151; white-space: pre-line; }
+
+    /* 底部導航 (懸浮膠囊) */
+    .nav-capsule {
+        position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+        background: rgba(17, 24, 39, 0.9); backdrop-filter: blur(10px);
+        padding: 6px; border-radius: 40px;
+        display: flex; gap: 4px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        z-index: 100;
+    }
+    .nav-btn {
+        color: #9ca3af; padding: 10px 24px; border-radius: 30px;
+        cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.3s;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .nav-btn.active { background: white; color: black; }
 
 </style>
 </head>
 <body>
 
-<div id="home" class="view active">
-    <div class="top-header">
-        <div class="header-content">
-            <div class="header-title">Rex 投資研報</div>
-            <div class="header-subtitle">19欄位深度解析 · 產業百科 · 外電情報</div>
+<div class="app-container">
+
+    <div id="homeView" class="view active">
+        <div class="header">
+            <h1>Rex Intelligence</h1>
+            <p>2025.11.19 • 市場決策中樞</p>
         </div>
+
+        <div class="search-bar-container">
+            <span style="padding-left: 20px; font-size: 18px;">🔍</span>
+            <input type="text" class="search-input" placeholder="搜尋公司 / 代號 / 關鍵字..." onkeyup="app.globalSearch(this.value)">
+            <div class="filter-group">
+                <div class="f-chip active" onclick="app.filterHome('all', this)">全部</div>
+                <div class="f-chip" onclick="app.filterHome('high', this)">重點</div>
+            </div>
+        </div>
+
+        <div class="bento-grid">
+            <div class="bento-card bc-report" onclick="app.goList('report', 'all')">
+                <div class="bento-bg-icon">📝</div>
+                <div>
+                    <div class="bc-title"><span style="color:var(--c-report)">●</span> 深度研報</div>
+                    <div class="bc-desc">19欄位完整解析<br>包含營運、策略、QA</div>
+                </div>
+                <div class="bc-stat">Reports</div>
+            </div>
+
+            <div class="bento-card bc-high" onclick="app.goList('report', 'high')">
+                <div class="bento-bg-icon">🔥</div>
+                <div>
+                    <div class="bc-title"><span style="color:var(--c-alert)">●</span> Rex 精選</div>
+                    <div class="bc-desc">高重要性報告<br>評等買進 & 調升</div>
+                </div>
+                <div class="bc-stat">Focus</div>
+            </div>
+
+            <div class="bento-card bc-ind" onclick="app.switchView('industryView')">
+                <div class="bento-bg-icon">🏭</div>
+                <div>
+                    <div class="bc-title"><span style="color:var(--c-ind)">●</span> 產業百科</div>
+                    <div class="bc-desc">全市場定位查詢<br>供應鏈上下游關係</div>
+                </div>
+                <div class="bc-stat">Industry</div>
+            </div>
+
+            <div class="bento-card bc-news" onclick="app.switchView('newsView')">
+                <div class="bento-bg-icon">⚡</div>
+                <div>
+                    <div class="bc-title"><span style="color:var(--c-news)">●</span> 外電情報</div>
+                    <div class="bc-desc">Bloomberg / WSJ<br>即時市場快訊</div>
+                </div>
+                <div class="bc-stat">Global</div>
+            </div>
+        </div>
+
+        <h3 style="margin: 30px 0 16px;">📌 最新動態</h3>
+        <div class="list-grid" id="home-feed"></div>
     </div>
 
-    <div class="search-section">
-        <div class="search-box">
-            <input type="text" class="search-input" placeholder="搜尋公司、代號或關鍵字..." onkeyup="app.search(this.value)">
+    <div id="listView" class="view">
+        <div class="header">
+            <button class="btn-back" onclick="app.back()">←</button>
+            <h1 id="list-title">報告列表</h1>
         </div>
-        <div class="filter-chips">
-            <div class="filter-chip active" onclick="app.filter('all', this)">全部</div>
-            <div class="filter-chip" onclick="app.filter('high', this)">高重要性</div>
-            <div class="filter-chip" onclick="app.filter('ai', this)">AI概念</div>
-            <div class="filter-chip" onclick="app.filter('semi', this)">半導體</div>
-        </div>
+        <div class="list-grid" id="list-container"></div>
     </div>
 
-    <div class="feature-grid">
-        <div class="feature-card" onclick="app.filter('new')">
-            <div class="feature-icon">📝</div>
-            <div class="feature-title">最新報告</div>
-            <div class="feature-count">19欄位全開</div>
+    <div id="detailView" class="view">
+        <div class="header">
+            <button class="btn-back" onclick="app.back()">←</button>
+            <h1>深度解析</h1>
         </div>
-        <div class="feature-card" onclick="app.filter('high')">
-            <div class="feature-icon">🔥</div>
-            <div class="feature-title">重點快訊</div>
-            <div class="feature-count">調升 / 高重要</div>
-        </div>
-        <div class="feature-card" onclick="app.go('industryView')">
-            <div class="feature-icon">🏭</div>
-            <div class="feature-title">產業百科</div>
-            <div class="feature-count">6欄位定位</div>
-        </div>
-        <div class="feature-card" onclick="app.go('newsView')">
-            <div class="feature-icon">⚡</div>
-            <div class="feature-title">外電報導</div>
-            <div class="feature-count">10欄位情報</div>
-        </div>
+        <div class="chat-stack" id="detail-content"></div>
     </div>
 
-    <div class="report-list">
-        <div class="list-header">
-            <h2 class="list-title" id="list-heading">精選報告</h2>
-            <span style="font-size:13px; color:#9ca3af">資料庫連線中...</span>
+    <div id="industryView" class="view">
+        <div class="header">
+            <button class="btn-back" onclick="app.back()">←</button>
+            <h1>產業百科</h1>
         </div>
-        <div id="report-list-container"></div>
+        <div class="search-bar-container">
+            <input type="text" class="search-input" placeholder="輸入代號或名稱..." onkeyup="app.searchInd(this.value)">
+        </div>
+        <div class="list-grid" id="ind-container"></div>
     </div>
+
+    <div id="newsView" class="view">
+        <div class="header">
+            <button class="btn-back" onclick="app.back()">←</button>
+            <h1>外電綜合報導</h1>
+        </div>
+        <div class="list-grid" id="news-container"></div>
+    </div>
+
 </div>
 
-<div id="detailView" class="view">
-    <div class="top-header" style="padding-bottom:20px; border-radius:0;">
-        <button class="back-btn" onclick="app.back()">←</button>
-        <div class="header-content">
-            <div class="header-title">深度解析</div>
-        </div>
-    </div>
-    <div class="detail-container" id="chat-content"></div>
-</div>
-
-<div id="industryView" class="view">
-    <div class="top-header" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); padding-bottom:20px;">
-        <button class="back-btn" onclick="app.back()">←</button>
-        <div class="header-content"><div class="header-title">產業百科</div></div>
-    </div>
-    <div class="search-section">
-        <input type="text" class="search-input" placeholder="輸入代號或名稱 (如 2330)..." onkeyup="app.searchInd(this.value)">
-    </div>
-    <div class="report-list" id="ind-container"></div>
-</div>
-
-<div id="newsView" class="view">
-    <div class="top-header" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding-bottom:20px;">
-        <button class="back-btn" onclick="app.back()">←</button>
-        <div class="header-content"><div class="header-title">外電情報</div></div>
-    </div>
-    <div class="report-list" id="news-container" style="padding-top:20px;"></div>
-</div>
-
-<div class="bottom-nav">
-    <div class="nav-item active" onclick="app.go('home')">
-        <div class="nav-icon">🏠</div>
-        <div>首頁</div>
-    </div>
-    <div class="nav-item" onclick="app.go('industryView')">
-        <div class="nav-icon">🏭</div>
-        <div>產業</div>
-    </div>
-    <div class="nav-item" onclick="app.go('newsView')">
-        <div class="nav-icon">⚡</div>
-        <div>外電</div>
-    </div>
+<div class="nav-capsule">
+    <div class="nav-btn active" onclick="app.switchView('homeView')">🏠 首頁</div>
+    <div class="nav-btn" onclick="app.switchView('industryView')">🏭 產業</div>
+    <div class="nav-btn" onclick="app.switchView('newsView')">⚡ 外電</div>
 </div>
 
 <script>
-// === 1. 研報資料庫 (19欄位) ===
+/* 資料庫：嚴格遵守您的欄位要求
+*/
+
+// 1. 研報 (19欄位)
 const DB_REPORTS = [
     {
-        "編號": "R01", "公司": "華碩", "股號": "2357", "報告日期": "2025/11/19", "券商": "元大投顧", "分析師": "魏建發",
-        "產業": "PC/伺服器", "報告類型": "Call Memo", "投資評等": "買進", "目標價": "700", "重要性": "高",
-        "關鍵財務數據": "3Q25 營收 1,899億 (QoQ+9%)，EPS 14.2元。毛利率 17.2% 優於預期。",
-        "精簡重點摘要": "伺服器營收佔比明年挑戰 20%，GB200 出貨順暢。",
-        "營運重點": "1. 伺服器：預計 2025 年倍增，受惠 Tier-1 CSP。\n2. PC：AI PC 市占率 25%。",
-        "策略方向": "全力轉型 AI 伺服器解決方案，擴大邊緣運算佈局。",
-        "重要QA摘要": "Q: GB200 出貨？ A: 12月小量，Q1放量。\nQ: 毛利率？ A: 產品組合優化。",
-        "Rex觀察": "華碩是這波 AI 伺服器被低估的標的，起步晚但追趕快，NV 關係緊密。本益比修正後具吸引力。",
-        "後續追蹤": "1月 CES 展新品發布。", "標籤": "#AI伺服器 #GB200"
+        id: "R01", date: "2025/11/19", company: "華碩", code: "2357", broker: "元大投顧", analyst: "魏建發",
+        industry: "PC/伺服器", type: "Call Memo", rating: "買進", target: "700", imp: "高",
+        fin: "3Q25 營收 1,899億 (QoQ+9%)，EPS 14.2元。毛利率 17.2%。",
+        summary: "伺服器營收佔比明年挑戰 20%，GB200 出貨順暢。",
+        ops: "1. 伺服器：預計 2025 年倍增。\n2. PC：AI PC 市占率 25%。",
+        strat: "全力轉型 AI 伺服器解決方案。",
+        qa: "Q: GB200 出貨？ A: 12月小量，Q1放量。\nQ: 毛利率？ A: 產品組合優化。",
+        rex: "華碩是這波 AI 伺服器被低估的標的，起步晚但追趕快。",
+        follow: "1月 CES 展新品發布。", tags: "#AI伺服器 #GB200"
     },
     {
-        "編號": "R02", "公司": "致茂", "股號": "2360", "報告日期": "2025/11/19", "券商": "摩根士丹利", "分析師": "Sharon Shih",
-        "產業": "儀器設備", "報告類型": "個股", "投資評等": "優於大盤", "目標價": "520", "重要性": "中",
-        "關鍵財務數據": "預估 Q4 營收季增 15%，SLT 佔比 25%。",
-        "精簡重點摘要": "SLT 測試設備需求強勁，訂單見 2026。",
-        "營運重點": "1. AI 晶片：Blackwell 功耗提升拉長測試時間。\n2. CPO：測試設備通過驗證。",
-        "策略方向": "深耕半導體 Final Test 與矽光子。",
-        "重要QA摘要": "Q: CoWoS 擴產？ A: 正向，後段測試需求增。",
-        "Rex觀察": "設備股王。測試時間拉長是最大利多，拉回找買點。",
-        "後續追蹤": "CoWoS 擴產進度。", "標籤": "#CoWoS #CPO"
+        id: "R02", date: "2025/11/19", company: "致茂", code: "2360", broker: "摩根士丹利", analyst: "Sharon Shih",
+        industry: "儀器設備", type: "個股報告", rating: "優於大盤", target: "520", imp: "中",
+        fin: "預估 Q4 營收季增 15%，SLT 佔比 25%。",
+        summary: "SLT 測試設備需求強勁，訂單能見度達 2026。",
+        ops: "1. AI 晶片：Blackwell 功耗提升。\n2. CPO：通過驗證。",
+        strat: "深耕半導體 Final Test。",
+        qa: "Q: CoWoS 擴產影響？ A: 正向。",
+        rex: "設備股王。測試時間拉長是最大利多。",
+        follow: "CoWoS 擴產進度。", tags: "#CoWoS #CPO"
     }
 ];
 
-// === 2. 外電資料庫 (10欄位) ===
+// 2. 外電 (10欄位)
 const DB_NEWS = [
     {
-        "編號": "N01", "資料類型": "外電", "日期": "11/19", "公司": "台積電", "股號": "2330",
-        "券商來源": "Bloomberg", "分類": "營運", "重要性": "高",
-        "內容": "彭博：台積電亞利桑那廠 (Fab 21) 良率超台灣。黃仁勳稱 Blackwell 需求瘋狂，台積是唯一夥伴。",
-        "標籤": "#晶圓代工 #美國廠"
+        id: "N01", type: "外電報導", date: "2025/11/19", company: "台積電", code: "2330",
+        source: "Bloomberg", cat: "營運展望", imp: "高",
+        content: "彭博：台積電亞利桑那廠 (Fab 21) 良率超台灣。黃仁勳稱 Blackwell 需求瘋狂。",
+        tags: "#晶圓代工 #美國廠"
     },
     {
-        "編號": "N02", "資料類型": "投行", "日期": "11/19", "公司": "聯發科", "股號": "2454",
-        "券商來源": "Morgan Stanley", "分類": "新品", "重要性": "中",
-        "內容": "大摩：天璣 9400 中國銷量佳，受惠 Vivo/Oppo。Q4 手機營收估季增 10-15%。",
-        "標籤": "#天璣9400"
+        id: "N02", type: "投行快訊", date: "2025/11/19", company: "聯發科", code: "2454",
+        source: "Morgan Stanley", cat: "新品發表", imp: "中",
+        content: "大摩：天璣 9400 中國銷量佳，受惠 Vivo/Oppo。",
+        tags: "#天璣9400"
     }
 ];
 
-// === 3. 產業資料庫 (6欄位) ===
+// 3. 產業 (6欄位)
 const DB_IND = [
-    { c:"2330", n:"台積電", m:"上市", i:"半導體", s:"晶圓代工", p:"全球晶圓代工龍頭 (市占>60%)" },
-    { c:"2357", n:"華碩", m:"上市", i:"電腦週邊", s:"PC/伺服器", p:"全球主機板第一大，ROG 電競龍頭" },
-    { c:"6669", n:"緯穎", m:"上市", i:"電腦週邊", s:"雲端伺服器", p:"專注 CSP 資料中心 ODM Direct" }
+    { code:"2330", name:"台積電", market:"上市", main:"半導體", sub:"晶圓代工", pos:"全球晶圓代工龍頭 (市占>60%)" },
+    { code:"2357", name:"華碩", market:"上市", main:"電腦週邊", sub:"PC/伺服器", pos:"全球主機板第一大，ROG 電競龍頭" }
 ];
 
-// === 邏輯核心 ===
+/* App 邏輯 
+*/
 const app = {
-    history: ['home'],
+    history: ['homeView'],
 
     init: function() {
-        this.renderList(DB_REPORTS);
-        this.renderNews(DB_NEWS);
+        this.renderHomeFeed();
+        this.renderNews();
+        this.searchInd('');
     },
 
-    // 渲染首頁列表
-    renderList: function(data) {
-        const el = document.getElementById('report-list-container');
-        el.innerHTML = data.map((d, i) => `
-            <div class="report-item" onclick="app.showDetail(${i})">
-                <div class="ri-top">
-                    <div><span class="ri-name">${d.公司}</span><span class="ri-code">${d.股號}</span></div>
-                    <div style="font-weight:700; color:${d.投資評等.includes('買')?'#dc2626':'#d97706'}">${d.投資評等}</div>
-                </div>
-                <div class="ri-date">${d.報告日期} · ${d.券商}</div>
-                <div class="ri-summary">${d.精簡重點摘要}</div>
-                <div class="ri-tags">
-                    ${d.重要性==='高'?'<span class="tag high">高重要</span>':''}
-                    <span class="tag">TP:${d.目標價}</span>
-                    ${d.標籤.split(' ')[0] ? `<span class="tag">${d.標籤.split(' ')[0]}</span>`:''}
-                </div>
-            </div>
-        `).join('');
-    },
-
-    // 渲染詳情 (Chat UI - 19欄位)
-    showDetail: function(index) {
-        const d = DB_REPORTS[index];
-        const c = document.getElementById('chat-content');
-        c.innerHTML = ''; // 清空
-
-        const steps = [
-            { html: `<div class="chat-bubble bubble-meta">
-                <div class="cb-title">📌 基本資訊</div>
-                <div style="font-size:20px; font-weight:700; color:#1f2937">${d.公司} ${d.股號}</div>
-                <div style="color:#6b7280; font-size:13px; margin-bottom:8px;">${d.券商} · ${d.分析師} · ${d.重要性}重要</div>
-                <div style="display:flex; gap:12px; border-top:1px solid #f3f4f6; padding-top:8px;">
-                    <div><div style="font-size:12px; color:#9ca3af">評等</div><div style="font-weight:700; color:#dc2626">${d.投資評等}</div></div>
-                    <div><div style="font-size:12px; color:#9ca3af">目標價</div><div style="font-weight:700">${d.目標價}</div></div>
-                    <div><div style="font-size:12px; color:#9ca3af">類型</div><div>${d.報告類型}</div></div>
-                </div>
-            </div>`},
-            { html: `<div class="chat-bubble"><div class="cb-title">⚡ 重點摘要</div><div class="cb-content">${d.精簡重點摘要}</div></div>`},
-            { html: `<div class="chat-bubble"><div class="cb-title">💰 財務數據</div><div class="cb-content">${d.關鍵財務數據}</div></div>`},
-            { html: `<div class="chat-bubble"><div class="cb-title">🏢 營運重點</div><div class="cb-content">${d.營運重點}</div></div>`},
-            { html: `<div class="chat-bubble"><div class="cb-title">🎯 策略方向</div><div class="cb-content">${d.策略方向}</div></div>`},
-            { html: `<div class="chat-bubble"><div class="cb-title">❓ QA 摘要</div><div class="cb-content">${d.重要QA摘要}</div></div>`},
-            { html: `<div class="chat-bubble bubble-rex"><div class="cb-title" style="color:#b45309">👑 Rex 觀察</div><div class="cb-content" style="color:#78350f">${d.Rex觀察}</div></div>`},
-            { html: `<div class="chat-bubble"><div class="cb-title">📅 後續追蹤</div><div class="cb-content">${d.後續追蹤}<br><br><small style="color:#9ca3af">${d.標籤}</small></div></div>`}
-        ];
-
-        steps.forEach((s, i) => setTimeout(() => {
-            c.insertAdjacentHTML('beforeend', s.html);
-            window.scrollTo(0, document.body.scrollHeight);
-        }, i * 100));
-        
-        this.go('detailView');
-    },
-
-    // 渲染產業 (6欄位)
-    searchInd: function(val) {
-        const el = document.getElementById('ind-container');
-        if(!val) { el.innerHTML = ''; return; }
-        const res = DB_IND.filter(x => (x.c+x.n+x.i).includes(val));
-        el.innerHTML = res.map(d => `
-            <div class="info-card">
-                <div class="ic-head">
-                    <span class="ic-title">${d.n} ${d.c}</span>
-                    <span class="ic-badge" style="background:#10b981; color:white">${d.m}</span>
-                </div>
-                <div style="font-size:13px; color:#6b7280; margin-bottom:4px;">${d.i} > ${d.s}</div>
-                <div style="background:#f0fdf4; padding:10px; border-radius:8px; color:#047857; font-size:14px;">🏆 ${d.p}</div>
-            </div>
-        `).join('');
-    },
-
-    // 渲染外電 (10欄位)
-    renderNews: function(data) {
-        const el = document.getElementById('news-container');
-        if(data) {
-            el.innerHTML = data.map(n => `
-                <div class="info-card">
-                    <div class="ic-head">
-                        <span style="color:#d97706; font-weight:700;">📰 ${n.券商來源}</span>
-                        <span style="font-size:12px; color:#9ca3af">${n.日期}</span>
-                    </div>
-                    <div style="margin-bottom:10px;">
-                        <span class="ic-title">${n.公司} ${n.股號}</span>
-                        <span class="ic-badge" style="background:#fee2e2; color:#dc2626; margin-left:8px;">${n.重要性}</span>
-                        <span class="ic-badge" style="background:#e0f2fe; color:#0284c7;">${n.分類}</span>
-                    </div>
-                    <div style="font-size:14px; color:#374151; line-height:1.6; margin-bottom:10px;">${n.內容}</div>
-                    <div style="font-size:12px; color:#9ca3af;">🏷️ ${n.標籤}</div>
-                </div>
-            `).join('');
-        }
-    },
-
-    // 導航控制
-    go: function(id) {
+    switchView: function(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         
-        if(id==='home') document.querySelectorAll('.nav-item')[0].classList.add('active');
-        if(id==='industryView') document.querySelectorAll('.nav-item')[1].classList.add('active');
-        if(id==='newsView') document.querySelectorAll('.nav-item')[2].classList.add('active');
-        
+        // Nav Update
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        if(id==='homeView') document.querySelectorAll('.nav-btn')[0].classList.add('active');
+        if(id==='industryView') document.querySelectorAll('.nav-btn')[1].classList.add('active');
+        if(id==='newsView') document.querySelectorAll('.nav-btn')[2].classList.add('active');
+
+        if(this.history[this.history.length-1] !== id) this.history.push(id);
         window.scrollTo(0,0);
     },
-    back: function() { this.go('home'); },
-    filter: function(type, btn) {
-        // 簡單切換 Tab 樣式
-        if(btn) {
-            document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
-            btn.classList.add('active');
+
+    back: function() {
+        if(this.history.length > 1) { this.history.pop(); this.switchView(this.history.pop()); }
+        else { this.switchView('homeView'); }
+    },
+
+    // 渲染首頁下方列表
+    renderHomeFeed: function() {
+        const el = document.getElementById('home-feed');
+        el.innerHTML = DB_REPORTS.map((d,i) => this.createReportCard(d, i)).join('');
+    },
+
+    // 產生研報卡片 (共用)
+    createReportCard: function(d, index) {
+        return `
+        <div class="data-card" onclick="app.showDetail(${index})">
+            <div class="dc-head">
+                <span class="dc-title">${d.company} ${d.code}</span>
+                <span class="dc-tag ${d.rating==='買進'?'tag-buy':'tag-hold'}">${d.rating}</span>
+            </div>
+            <div class="dc-body">
+                <b>${d.summary}</b><br>
+                <span style="font-size:12px; color:#9ca3af">${d.date} · ${d.broker}</span>
+            </div>
+            <div class="dc-foot">
+                <span>🎯 TP: ${d.target}</span>
+                <span>${d.imp==='高'?'🔥 高重要':''}</span>
+                <span style="margin-left:auto">${d.tags.split(' ')[0]}</span>
+            </div>
+        </div>`;
+    },
+
+    // 跳轉到列表頁
+    goList: function(type, filter) {
+        const el = document.getElementById('list-container');
+        const title = document.getElementById('list-title');
+        let data = DB_REPORTS;
+        
+        if(filter === 'high') {
+            data = DB_REPORTS.filter(d => d.imp === '高');
+            title.innerText = "精選重點報告";
+        } else {
+            title.innerText = "所有研報列表";
         }
-        document.getElementById('list-heading').innerText = type==='high' ? '高重要性報告' : '精選報告';
-        const data = type==='high' ? DB_REPORTS.filter(d=>d.重要性==='高') : DB_REPORTS;
-        this.renderList(data);
+        
+        el.innerHTML = data.map((d, i) => this.createReportCard(d, i)).join('');
+        this.switchView('listView');
+    },
+
+    // 顯示詳情 (Info Blocks)
+    showDetail: function(index) {
+        const d = DB_REPORTS[index];
+        const el = document.getElementById('detail-content');
+        el.innerHTML = '';
+
+        const blocks = [
+            { html: `<div class="info-block ib-meta">
+                <div class="ib-head">📌 基本資訊 Report Info</div>
+                <div style="font-size:24px; font-weight:800; color:#111827; margin-bottom:8px;">${d.company} ${d.code}</div>
+                <div style="color:#6b7280; margin-bottom:16px;">${d.date} · ${d.broker} · ${d.analyst}</div>
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; border-top:1px solid #f3f4f6; padding-top:16px;">
+                    <div><div style="font-size:12px;color:#9ca3af">評等</div><div style="font-weight:700;color:#ef4444">${d.rating}</div></div>
+                    <div><div style="font-size:12px;color:#9ca3af">目標價</div><div style="font-weight:700">${d.target}</div></div>
+                    <div><div style="font-size:12px;color:#9ca3af">重要性</div><div style="font-weight:700">${d.imp}</div></div>
+                </div>
+            </div>`},
+            { html: `<div class="info-block"><div class="ib-head">⚡ 摘要 Summary</div><div class="ib-content">${d.summary}</div></div>`},
+            { html: `<div class="info-block"><div class="ib-head">💰 財務 Financials</div><div class="ib-content">${d.fin}</div></div>`},
+            { html: `<div class="info-block"><div class="ib-head">🏢 營運 Operations</div><div class="ib-content">${d.ops}</div></div>`},
+            { html: `<div class="info-block"><div class="ib-head">🎯 策略 Strategy</div><div class="ib-content">${d.strat}</div></div>`},
+            { html: `<div class="info-block"><div class="ib-head">❓ QA 摘要</div><div class="ib-content">${d.qa}</div></div>`},
+            { html: `<div class="info-block ib-rex"><div class="ib-head" style="color:#b45309">👑 Rex 觀察</div><div class="ib-content" style="color:#92400e">${d.rex}</div></div>`},
+            { html: `<div class="info-block"><div class="ib-head">📅 追蹤 Follow-up</div><div class="ib-content">${d.follow}<br><br><span style="background:#f3f4f6;padding:4px 8px;border-radius:4px;font-size:12px;">${d.tags}</span></div></div>`}
+        ];
+
+        blocks.forEach((b, i) => setTimeout(() => {
+            el.insertAdjacentHTML('beforeend', b.html);
+            window.scrollTo(0, document.body.scrollHeight);
+        }, i * 100));
+
+        this.switchView('detailView');
+    },
+
+    // 渲染外電
+    renderNews: function() {
+        const el = document.getElementById('news-container');
+        el.innerHTML = DB_NEWS.map(n => `
+            <div class="data-card" style="border-left:4px solid #f59e0b">
+                <div class="dc-head">
+                    <span style="color:#d97706; font-weight:700;">📰 ${n.source}</span>
+                    <span style="color:#9ca3af; font-size:12px;">${n.date}</span>
+                </div>
+                <div style="font-weight:700; font-size:18px; margin-bottom:6px;">${n.company} <span style="font-weight:400; color:#9ca3af">${n.code}</span></div>
+                <div style="margin-bottom:10px; display:flex; gap:6px;">
+                    <span class="dc-tag tag-cat">${n.cat}</span>
+                    <span class="dc-tag tag-buy">${n.imp}重要</span>
+                </div>
+                <div class="dc-body">${n.content}</div>
+                <div class="dc-foot">
+                    <span>🏷️ ${n.tags}</span>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    // 渲染產業
+    searchInd: function(val) {
+        const el = document.getElementById('ind-container');
+        if(!val && val !== '') return;
+        const res = val===''? DB_IND : DB_IND.filter(d => (d.code+d.name).includes(val));
+        
+        el.innerHTML = res.map(d => `
+            <div class="data-card" style="border-left:4px solid #10b981">
+                <div class="dc-head">
+                    <span style="font-weight:800; font-size:18px; color:#064e3b">${d.name} <small style="color:#6b7280; font-weight:400">${d.code}</small></span>
+                    <span style="background:#059669; color:white; font-size:11px; padding:2px 8px; border-radius:6px;">${d.market}</span>
+                </div>
+                <div style="color:#6b7280; font-size:13px; margin-bottom:8px;">${d.main} > ${d.sub}</div>
+                <div style="background:#ecfdf5; padding:12px; border-radius:8px; color:#047857; font-size:14px; line-height:1.5; border:1px dashed #34d399;">
+                    🏆 ${d.pos}
+                </div>
+            </div>
+        `).join('');
     }
 };
 
