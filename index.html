@@ -3,97 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rex大叔投資戰情室 v4.0</title>
+    <title>Rex大叔投資戰情室 v5.0</title>
     
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        body { background-color: #f1f5f9; font-family: 'Noto Sans TC', sans-serif; color: #334155; }
+        /* 全局字體設定：加深顏色，提升閱讀性 */
+        body { background-color: #f8fafc; font-family: 'Noto Sans TC', sans-serif; color: #1e293b; }
         
-        /* 隱藏/顯示控制 */
+        /* 標題強調色 */
+        .text-heading { color: #0f172a; font-weight: 700; } /* 近乎純黑 */
+        .text-sub { color: #475569; font-weight: 500; } /* 深灰 */
+        .text-body { color: #334155; line-height: 1.6; } /* 本文深灰 */
+
+        /* 區塊切換動畫 */
         .section-view { display: none; animation: fadeIn 0.3s ease-in-out; }
         .section-view.active { display: block; }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 大按鈕特效 */
-        .big-card { transition: all 0.3s ease; cursor: pointer; border-bottom: 4px solid transparent; }
-        .big-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
-        .big-card-1:hover { border-bottom-color: #3b82f6; } /* 藍 */
-        .big-card-2:hover { border-bottom-color: #eab308; } /* 黃 */
-        .big-card-3:hover { border-bottom-color: #ef4444; } /* 紅 */
+        /* 大卡片互動效果 */
+        .nav-card { 
+            transition: all 0.2s ease; 
+            border: 2px solid #e2e8f0;
+        }
+        .nav-card:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: #94a3b8;
+        }
 
-        /* 字體優化 */
-        .text-read { font-size: 1.1rem; line-height: 1.8; } /* 閱讀舒適字體 */
-        
-        /* 標籤 */
-        .tag { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 0.85rem; font-weight: 500; margin-right: 6px; margin-bottom: 6px; }
-        
-        /* 滾動條 */
-        ::-webkit-scrollbar { width: 10px; }
-        ::-webkit-scrollbar-track { background: #e2e8f0; }
-        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; }
+        /* 標籤樣式 */
+        .tag-pill { 
+            display: inline-block; 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            font-size: 0.8rem; 
+            font-weight: 600; 
+            margin-right: 4px; 
+            background-color: #f1f5f9; 
+            color: #475569; 
+            border: 1px solid #cbd5e1;
+        }
+
+        /* 滾動條優化 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        /* 星星防爆框設定 */
+        .star-container {
+            white-space: nowrap; 
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <aside class="w-20 md:w-64 bg-slate-900 text-white flex-shrink-0 flex flex-col shadow-2xl z-30 transition-all duration-300">
-        <div class="p-6 flex flex-col items-center md:items-start border-b border-slate-800">
+    <aside class="w-64 bg-slate-900 text-white flex-col hidden md:flex shadow-xl z-30">
+        <div class="p-6 border-b border-slate-800">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center text-slate-900 font-bold text-xl shadow-lg">R</div>
-                <div class="hidden md:block">
-                    <h1 class="text-xl font-bold text-yellow-500">Rex大叔</h1>
-                    <p class="text-xs text-slate-400">168 智能戰情室</p>
+                <div>
+                    <h1 class="text-xl font-bold text-white tracking-wide">Rex大叔</h1>
+                    <p class="text-xs text-gray-400 mt-1">168 智能戰情室</p>
                 </div>
             </div>
         </div>
 
-        <nav class="flex-1 py-6 space-y-2 overflow-y-auto">
+        <nav class="flex-1 py-4 space-y-1 overflow-y-auto">
             <button onclick="goHome()" class="w-full flex items-center px-6 py-4 hover:bg-slate-800 transition text-left border-l-4 border-transparent hover:border-yellow-500 group">
-                <i class="fa-solid fa-house text-xl w-8 text-center text-slate-400 group-hover:text-white"></i>
-                <span class="hidden md:block ml-2 font-medium text-lg">戰情首頁</span>
+                <i class="fa-solid fa-house text-lg w-8 text-center text-gray-400 group-hover:text-white"></i>
+                <span class="font-bold text-lg">戰情首頁</span>
             </button>
-            
-            <div class="my-4 border-t border-slate-800"></div>
-
+            <div class="px-6 py-2 text-xs font-bold text-gray-500 uppercase mt-4">資料庫</div>
             <button onclick="showSection('industry')" class="w-full flex items-center px-6 py-3 hover:bg-slate-800 transition text-left group">
-                <i class="fa-solid fa-industry text-xl w-8 text-center text-blue-400"></i>
-                <span class="hidden md:block ml-2 text-slate-300">產業百科</span>
+                <i class="fa-solid fa-city text-lg w-8 text-center text-blue-400"></i>
+                <span class="text-gray-300 font-medium group-hover:text-white">產業百科</span>
             </button>
             <button onclick="showSection('reports')" class="w-full flex items-center px-6 py-3 hover:bg-slate-800 transition text-left group">
-                <i class="fa-solid fa-file-lines text-xl w-8 text-center text-yellow-400"></i>
-                <span class="hidden md:block ml-2 text-slate-300">研究報告</span>
+                <i class="fa-solid fa-file-contract text-lg w-8 text-center text-yellow-400"></i>
+                <span class="text-gray-300 font-medium group-hover:text-white">研究報告</span>
             </button>
             <button onclick="showSection('news')" class="w-full flex items-center px-6 py-3 hover:bg-slate-800 transition text-left group">
-                <i class="fa-solid fa-newspaper text-xl w-8 text-center text-red-400"></i>
-                <span class="hidden md:block ml-2 text-slate-300">外資快訊</span>
+                <i class="fa-solid fa-newspaper text-lg w-8 text-center text-red-400"></i>
+                <span class="text-gray-300 font-medium group-hover:text-white">外資快訊</span>
             </button>
         </nav>
         
-        <div class="p-4 border-t border-slate-800 hidden md:block">
-            <div class="text-xs text-slate-500 mb-2">資料庫狀態</div>
-            <div id="dbStatus" class="flex items-center text-xs text-green-400">
-                <span class="relative flex h-2 w-2 mr-2">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                </span>
-                <span id="statusText">讀取中...</span>
-            </div>
+        <div class="p-4 bg-slate-950 text-xs text-center text-gray-500">
+            資料庫狀態: <span id="dbStatus" class="text-yellow-500 font-bold">連線中...</span>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative bg-slate-50">
         
-        <header class="h-16 bg-white shadow-sm flex justify-between items-center px-8 z-20">
+        <header class="h-16 bg-white shadow-sm flex justify-between items-center px-8 z-20 border-b border-gray-200">
             <h2 class="text-xl font-bold text-slate-800 flex items-center gap-3" id="pageTitle">
-                <i class="fa-solid fa-chart-pie text-yellow-500"></i> 戰情總覽
+                <i class="fa-solid fa-chart-pie text-yellow-600"></i> 戰情總覽
             </h2>
-            <div class="text-sm text-slate-500 font-medium bg-slate-100 px-4 py-2 rounded-full">
-                <i class="fa-regular fa-calendar mr-2"></i><span id="currentDate">2025/11/20</span>
+            <div class="text-sm font-bold text-slate-600 bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
+                <i class="fa-regular fa-calendar-check mr-2 text-slate-500"></i><span id="currentDate"></span>
             </div>
         </header>
 
@@ -101,79 +116,77 @@
 
             <div id="view-home" class="section-view active">
                 <div class="mb-8">
-                    <h3 class="text-3xl font-bold text-slate-800 mb-2">早安，Rex 大叔</h3>
-                    <p class="text-slate-500 text-lg">今天想關注哪個領域的市場動態？</p>
+                    <h3 class="text-3xl font-bold text-slate-900 mb-2">早安，Rex 大叔</h3>
+                    <p class="text-slate-600 font-medium text-lg">請選擇您要分析的資料模組：</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div onclick="showSection('industry')" class="big-card big-card-1 bg-white p-8 rounded-2xl shadow-md flex flex-col items-center justify-center h-80 group relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-10 -mt-10 transition-transform group-hover:scale-150 z-0"></div>
-                        <div class="z-10 text-center">
-                            <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-4xl mb-6 mx-auto">
+                    <div onclick="showSection('industry')" class="nav-card bg-white p-8 rounded-2xl cursor-pointer group relative overflow-hidden">
+                        <div class="relative z-10 text-center">
+                            <div class="w-20 h-20 bg-blue-100 text-blue-700 rounded-2xl flex items-center justify-center text-4xl mb-6 mx-auto shadow-inner">
                                 <i class="fa-solid fa-city"></i>
                             </div>
-                            <h3 class="text-2xl font-bold text-slate-800 mb-2">產業百科 & 定位</h3>
-                            <p class="text-slate-500">查詢公司產品、細產業分類與市場地位</p>
-                            <span class="inline-block mt-6 px-4 py-1 bg-blue-50 text-blue-600 rounded-full text-sm font-bold" id="countInd">載入中...</span>
+                            <h3 class="text-2xl font-bold text-slate-900 mb-2">產業百科</h3>
+                            <p class="text-slate-600 font-medium">查詢公司產品、細產業分類與市場地位</p>
+                            <div class="mt-6 text-blue-700 font-bold text-sm bg-blue-50 px-3 py-1 rounded-full inline-block" id="countInd">載入中...</div>
                         </div>
                     </div>
 
-                    <div onclick="showSection('reports')" class="big-card big-card-2 bg-white p-8 rounded-2xl shadow-md flex flex-col items-center justify-center h-80 group relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-50 rounded-full -mr-10 -mt-10 transition-transform group-hover:scale-150 z-0"></div>
-                        <div class="z-10 text-center">
-                            <div class="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-2xl flex items-center justify-center text-4xl mb-6 mx-auto">
+                    <div onclick="showSection('reports')" class="nav-card bg-white p-8 rounded-2xl cursor-pointer group relative overflow-hidden">
+                        <div class="relative z-10 text-center">
+                            <div class="w-20 h-20 bg-yellow-100 text-yellow-700 rounded-2xl flex items-center justify-center text-4xl mb-6 mx-auto shadow-inner">
                                 <i class="fa-solid fa-file-invoice-dollar"></i>
                             </div>
-                            <h3 class="text-2xl font-bold text-slate-800 mb-2">投資研究報告</h3>
-                            <p class="text-slate-500">瀏覽個股深度分析、營運重點與評等</p>
-                            <span class="inline-block mt-6 px-4 py-1 bg-yellow-50 text-yellow-600 rounded-full text-sm font-bold" id="countRep">載入中...</span>
+                            <h3 class="text-2xl font-bold text-slate-900 mb-2">研究報告</h3>
+                            <p class="text-slate-600 font-medium">瀏覽個股深度分析、營運重點與評等</p>
+                            <div class="mt-6 text-yellow-700 font-bold text-sm bg-yellow-50 px-3 py-1 rounded-full inline-block" id="countRep">載入中...</div>
                         </div>
                     </div>
 
-                    <div onclick="showSection('news')" class="big-card big-card-3 bg-white p-8 rounded-2xl shadow-md flex flex-col items-center justify-center h-80 group relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full -mr-10 -mt-10 transition-transform group-hover:scale-150 z-0"></div>
-                        <div class="z-10 text-center">
-                            <div class="w-20 h-20 bg-red-100 text-red-500 rounded-2xl flex items-center justify-center text-4xl mb-6 mx-auto">
+                    <div onclick="showSection('news')" class="nav-card bg-white p-8 rounded-2xl cursor-pointer group relative overflow-hidden">
+                        <div class="relative z-10 text-center">
+                            <div class="w-20 h-20 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-4xl mb-6 mx-auto shadow-inner">
                                 <i class="fa-solid fa-bolt"></i>
                             </div>
-                            <h3 class="text-2xl font-bold text-slate-800 mb-2">外資 / 市場快訊</h3>
-                            <p class="text-slate-500">掌握最新市場傳聞、外電與即時動態</p>
-                            <span class="inline-block mt-6 px-4 py-1 bg-red-50 text-red-500 rounded-full text-sm font-bold" id="countNews">載入中...</span>
+                            <h3 class="text-2xl font-bold text-slate-900 mb-2">外資快訊</h3>
+                            <p class="text-slate-600 font-medium">掌握最新市場傳聞、外電與即時動態</p>
+                            <div class="mt-6 text-red-600 font-bold text-sm bg-red-50 px-3 py-1 rounded-full inline-block" id="countNews">載入中...</div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div id="view-industry" class="section-view">
-                <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6 sticky top-0 z-10">
                     <div class="flex gap-4">
-                        <input type="text" id="searchIndustry" placeholder="輸入股號、公司名或產品關鍵字..." class="flex-1 p-3 border border-slate-200 rounded-lg text-lg focus:ring-2 focus:ring-blue-400 outline-none">
-                        <select id="filterIndustryMain" class="p-3 border border-slate-200 rounded-lg bg-white text-lg min-w-[200px]"><option value="">所有主產業</option></select>
+                        <input type="text" id="searchIndustry" placeholder="輸入股號、公司名或產品關鍵字..." class="flex-1 p-3 border-2 border-gray-200 rounded-lg text-lg focus:border-blue-500 outline-none text-slate-800 font-medium placeholder-gray-400">
+                        <select id="filterIndustryMain" class="p-3 border-2 border-gray-200 rounded-lg bg-white text-lg font-bold text-slate-700 min-w-[200px] cursor-pointer"><option value="">所有主產業</option></select>
                     </div>
                 </div>
-                <div id="industryList" class="grid grid-cols-1 gap-4">
-                    </div>
+                <div id="industryList" class="grid grid-cols-1 gap-4"></div>
                 <div id="industryPagination" class="flex justify-center mt-8 gap-2"></div>
             </div>
 
             <div id="view-reports" class="section-view">
-                <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6 sticky top-0 z-10">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <input type="text" id="searchReport" placeholder="搜尋報告..." class="col-span-2 p-3 border border-slate-200 rounded-lg text-lg focus:ring-2 focus:ring-yellow-400 outline-none">
-                        <select id="filterReportInd" class="p-3 border border-slate-200 rounded-lg bg-white"><option value="">所有產業</option></select>
-                        <select id="filterReportRating" class="p-3 border border-slate-200 rounded-lg bg-white"><option value="">所有評等</option></select>
+                        <input type="text" id="searchReport" placeholder="搜尋報告 (如: 台積電, 買進)..." class="col-span-2 p-3 border-2 border-gray-200 rounded-lg text-lg focus:border-yellow-500 outline-none text-slate-800 font-medium placeholder-gray-400">
+                        <select id="filterReportInd" class="p-3 border-2 border-gray-200 rounded-lg bg-white font-bold text-slate-700 cursor-pointer"><option value="">所有產業</option></select>
+                        <select id="filterReportRating" class="p-3 border-2 border-gray-200 rounded-lg bg-white font-bold text-slate-700 cursor-pointer"><option value="">所有評等</option></select>
                     </div>
                 </div>
-                <div id="reportsList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    </div>
+                <div id="reportsList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
                 <div id="reportsPagination" class="flex justify-center mt-8 gap-2"></div>
             </div>
 
             <div id="view-news" class="section-view">
-                <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
-                    <input type="text" id="searchNews" placeholder="搜尋新聞標題、內容..." class="w-full p-3 border border-slate-200 rounded-lg text-lg focus:ring-2 focus:ring-red-400 outline-none">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6 sticky top-0 z-10">
+                    <div class="relative">
+                        <i class="fa-solid fa-search absolute left-4 top-4 text-gray-400"></i>
+                        <input type="text" id="searchNews" placeholder="搜尋新聞標題、內容..." class="w-full pl-12 p-3 border-2 border-gray-200 rounded-lg text-lg focus:border-red-500 outline-none text-slate-800 font-medium placeholder-gray-400">
+                    </div>
                 </div>
-                <div id="newsList" class="space-y-4">
+                <div id="newsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     </div>
                 <div id="newsPagination" class="flex justify-center mt-8 gap-2"></div>
             </div>
@@ -182,32 +195,32 @@
     </main>
 
     <div id="detailModal" class="fixed inset-0 z-50 hidden" aria-modal="true">
-        <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
+        <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
         <div class="fixed inset-0 z-10 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl border-t-8 border-slate-800 overflow-hidden">
                     
                     <div class="bg-slate-50 px-8 py-6 border-b border-slate-200 flex justify-between items-start">
                         <div>
-                            <span class="text-sm font-bold tracking-wider text-slate-400 uppercase mb-1 block" id="mCategory">類別</span>
-                            <h3 class="text-3xl font-bold text-slate-800 mb-2" id="mTitle">標題</h3>
-                            <div class="flex items-center gap-3 text-slate-500 text-sm font-medium">
-                                <span id="mSubtitle1" class="bg-white border px-2 py-0.5 rounded">--</span>
-                                <span id="mSubtitle2">--</span>
+                            <span class="text-sm font-bold tracking-wider uppercase mb-2 block px-3 py-1 rounded w-fit" id="mCategory">類別</span>
+                            <h3 class="text-3xl font-bold text-slate-900 mb-3 leading-tight" id="mTitle">標題</h3>
+                            <div class="flex items-center gap-4 text-slate-600 font-medium">
+                                <span id="mSubtitle1" class="bg-white border border-slate-300 px-3 py-1 rounded-md shadow-sm">--</span>
+                                <span id="mSubtitle2" class="text-slate-500">--</span>
                             </div>
                         </div>
-                        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200 p-2 rounded-full transition">
-                            <i class="fa-solid fa-xmark text-2xl"></i>
+                        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 hover:bg-slate-200 p-2 rounded-full transition">
+                            <i class="fa-solid fa-xmark text-3xl"></i>
                         </button>
                     </div>
 
-                    <div class="px-8 py-8 max-h-[65vh] overflow-y-auto custom-scroll">
+                    <div class="px-8 py-8 max-h-[65vh] overflow-y-auto custom-scroll bg-white">
                         <div id="mContent" class="space-y-8">
                             </div>
                     </div>
 
-                    <div class="bg-slate-50 px-8 py-4 border-t border-slate-200 text-right">
-                        <button onclick="closeModal()" class="px-6 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition font-medium">關閉</button>
+                    <div class="bg-slate-100 px-8 py-4 border-t border-slate-200 text-right">
+                        <button onclick="closeModal()" class="px-8 py-3 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition font-bold shadow-md">關閉視窗</button>
                     </div>
                 </div>
             </div>
@@ -215,13 +228,17 @@
     </div>
 
     <script>
-        // === 資料設定 ===
-        const FILES = { ind: 'industry.xlsx', rep: 'reports.xlsx', news: 'news.xlsx' };
-        const PAGE_SIZE = 12; // 每頁筆數
+        // === 檔案設定 ===
+        // 確保檔名與您的檔案完全一致
+        const FILES = { 
+            ind: 'industry.xlsx', 
+            rep: 'reports.xlsx', 
+            news: 'news.xlsx' 
+        };
+        const PAGE_SIZE = 12;
 
-        // === 全局狀態 ===
         let DB = { industry: [], reports: [], news: [], indMap: {} };
-        let APP = { currentView: 'home', filters: {}, page: 1 };
+        let APP = { currentView: 'home', page: 1 };
 
         // === 初始化 ===
         document.addEventListener('DOMContentLoaded', () => {
@@ -229,12 +246,12 @@
             document.getElementById('currentDate').textContent = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
             loadData();
 
-            // 綁定搜尋事件 (防抖動)
-            setupSearch('searchIndustry', () => { APP.page = 1; renderIndustry(); });
-            setupSearch('searchReport', () => { APP.page = 1; renderReports(); });
-            setupSearch('searchNews', () => { APP.page = 1; renderNews(); });
+            // 搜尋監聽
+            setupSearch('searchIndustry', () => { APP.page=1; renderIndustry(); });
+            setupSearch('searchReport', () => { APP.page=1; renderReports(); });
+            setupSearch('searchNews', () => { APP.page=1; renderNews(); });
             
-            // 綁定下拉選單
+            // 下拉監聽
             document.getElementById('filterIndustryMain').addEventListener('change', () => { APP.page=1; renderIndustry(); });
             document.getElementById('filterReportInd').addEventListener('change', () => { APP.page=1; renderReports(); });
             document.getElementById('filterReportRating').addEventListener('change', () => { APP.page=1; renderReports(); });
@@ -248,73 +265,71 @@
             });
         }
 
-        // === 資料讀取 ===
+        // === 資料讀取核心 ===
         async function loadData() {
-            const status = document.getElementById('statusText');
+            const status = document.getElementById('dbStatus');
             try {
-                // 讀取 Industry
+                // 1. 讀取 Industry
                 const bufInd = await fetch(FILES.ind).then(r => r.arrayBuffer());
                 const wbInd = XLSX.read(bufInd);
                 DB.industry = XLSX.utils.sheet_to_json(wbInd.Sheets[wbInd.SheetNames[0]]);
                 
-                // 建立 Map (股號 -> 產業資訊)
+                // 建立對照表
                 DB.industry.forEach(row => {
                     if(row['代號']) DB.indMap[row['代號'].toString().trim()] = row;
                 });
 
-                // 讀取 Reports (自動修復)
+                // 2. 讀取 Reports
                 const bufRep = await fetch(FILES.rep).then(r => r.arrayBuffer());
                 const wbRep = XLSX.read(bufRep);
                 DB.reports = XLSX.utils.sheet_to_json(wbRep.Sheets[wbRep.SheetNames[0]]).map(r => {
                     let stockId = r['股號'] ? r['股號'].toString().trim() : '';
-                    // 修復產業
+                    // 自動修復產業
                     if(stockId && DB.indMap[stockId]) {
                         r['產業'] = DB.indMap[stockId]['產業'];
-                        r['細產業'] = DB.indMap[stockId]['細產業']; // 確保有細產業
                     }
                     return r;
                 });
 
-                // 讀取 News (容錯處理)
+                // 3. 讀取 News (重點修復)
                 try {
                     const bufNews = await fetch(FILES.news).then(r => {
                         if(!r.ok) throw new Error("News file missing");
                         return r.arrayBuffer();
                     });
                     const wbNews = XLSX.read(bufNews);
-                    DB.news = XLSX.utils.sheet_to_json(wbNews.Sheets[wbNews.SheetNames[0]]);
+                    // 讀取第一個工作表
+                    const sheetNews = wbNews.Sheets[wbNews.SheetNames[0]];
+                    DB.news = XLSX.utils.sheet_to_json(sheetNews);
+                    console.log("News loaded:", DB.news.length, DB.news[0]); // Debug用
                 } catch (e) {
-                    console.warn("News 讀取失敗或檔案不存在", e);
-                    DB.news = []; // 空陣列避免報錯
+                    console.warn("News 讀取異常:", e);
+                    DB.news = [];
                 }
 
-                // 完成
-                status.textContent = "連線成功";
-                status.parentElement.classList.add('text-green-400');
+                // 狀態更新
+                status.textContent = "資料庫連線正常";
+                status.classList.replace('text-yellow-500', 'text-green-400');
                 
-                // 更新首頁數字
                 document.getElementById('countInd').textContent = `共 ${DB.industry.length} 筆`;
                 document.getElementById('countRep').textContent = `共 ${DB.reports.length} 篇`;
                 document.getElementById('countNews').textContent = `共 ${DB.news.length} 則`;
 
-                // 初始化下拉選單
                 initDropdowns();
 
             } catch (e) {
                 console.error(e);
                 status.textContent = "讀取失敗";
-                status.parentElement.className = "flex items-center text-xs text-red-500";
-                alert("資料讀取發生錯誤，請確認 Excel 檔案是否存在且格式正確。");
+                status.classList.replace('text-yellow-500', 'text-red-500');
+                alert("無法讀取 Excel 檔案，請確認檔案是否已上傳至 GitHub。");
             }
         }
 
         function initDropdowns() {
-            // 產業選單
             const inds = new Set(DB.industry.map(x => x['產業']).filter(Boolean));
             fillSelect('filterIndustryMain', inds);
             fillSelect('filterReportInd', inds);
 
-            // 評等選單
             const ratings = new Set(DB.reports.map(x => x['投資評等']).filter(Boolean));
             fillSelect('filterReportRating', ratings);
         }
@@ -327,70 +342,80 @@
             });
         }
 
-        // === 頁面切換 ===
+        // === 介面切換 ===
         function goHome() { showSection('home'); }
-        
         function showSection(id) {
             APP.currentView = id;
-            APP.page = 1; // 重置頁碼
-            
-            // UI 切換
+            APP.page = 1;
             document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
             document.getElementById(`view-${id}`).classList.add('active');
             
-            // 標題更新
             const titles = {
-                'home': '<i class="fa-solid fa-chart-pie text-yellow-500"></i> 戰情總覽',
-                'industry': '<i class="fa-solid fa-city text-blue-500"></i> 產業百科資料庫',
-                'reports': '<i class="fa-solid fa-file-invoice-dollar text-yellow-500"></i> 投資研究報告',
-                'news': '<i class="fa-solid fa-newspaper text-red-500"></i> 外資市場快訊'
+                'home': '<i class="fa-solid fa-chart-pie text-yellow-600"></i> 戰情總覽',
+                'industry': '<i class="fa-solid fa-city text-blue-600"></i> 產業百科',
+                'reports': '<i class="fa-solid fa-file-contract text-yellow-600"></i> 研究報告',
+                'news': '<i class="fa-solid fa-newspaper text-red-600"></i> 外資快訊'
             };
             document.getElementById('pageTitle').innerHTML = titles[id];
 
-            // 渲染內容
             if(id === 'industry') renderIndustry();
             if(id === 'reports') renderReports();
             if(id === 'news') renderNews();
             
-            // 滾動回頂部
             document.getElementById('mainContainer').scrollTo(0,0);
         }
 
-        // === 渲染：產業百科 ===
+        // === 列表渲染器 ===
+        function renderList(containerId, data, renderFunc, paginationId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            if(data.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400 text-xl font-bold">查無資料</div>`;
+                document.getElementById(paginationId).innerHTML = '';
+                return;
+            }
+
+            const start = (APP.page - 1) * PAGE_SIZE;
+            const end = start + PAGE_SIZE;
+            data.slice(start, end).forEach(item => {
+                container.insertAdjacentHTML('beforeend', renderFunc(item));
+            });
+
+            renderPagination(paginationId, data.length);
+        }
+
+        // === 1. 產業百科渲染 ===
         function renderIndustry() {
             const key = document.getElementById('searchIndustry').value.toLowerCase();
             const cat = document.getElementById('filterIndustryMain').value;
-            
             const filtered = DB.industry.filter(item => {
                 const str = Object.values(item).join(' ').toLowerCase();
-                const matchKey = str.includes(key);
-                const matchCat = cat === '' || item['產業'] === cat;
-                return matchKey && matchCat;
+                return str.includes(key) && (cat === '' || item['產業'] === cat);
             });
-
-            renderList('industryList', filtered, renderIndustryCard, 'industryPagination');
-        }
-
-        function renderIndustryCard(item) {
-            return `
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:border-blue-300 transition cursor-pointer flex flex-col md:flex-row justify-between items-start md:items-center gap-4" onclick="openModal('industry', this.dataset.json)" data-json='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
-                    <div>
-                        <div class="flex items-center gap-3 mb-2">
-                            <span class="bg-slate-800 text-white px-3 py-1 rounded text-sm font-bold">${item['代號'] || 'N/A'}</span>
-                            <h3 class="text-xl font-bold text-slate-800">${item['名稱'] || '未知'}</h3>
-                            <span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-xs border border-blue-100">${item['產業']}</span>
+            renderList('industryList', filtered, (item) => `
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:border-blue-400 hover:shadow-md transition cursor-pointer" onclick="openModal('industry', this.dataset.json)" data-json='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="bg-slate-800 text-white px-3 py-1 rounded text-lg font-bold font-mono">${item['代號']}</span>
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-900">${item['名稱']}</h3>
+                                <span class="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">${item['產業']}</span>
+                            </div>
                         </div>
-                        <p class="text-slate-500 text-lg">${item['細產業'] || '--'}</p>
+                        <div class="hidden md:block text-right">
+                            <div class="text-sm text-gray-500 font-bold">細產業分類</div>
+                            <div class="text-slate-700 font-medium text-lg">${item['細產業'] || '--'}</div>
+                        </div>
                     </div>
-                    <div class="md:text-right">
-                         <div class="text-sm text-slate-400 mb-1">產業地位</div>
-                         <div class="text-slate-700 font-medium text-lg max-w-md">${item['產業地位'] || '無資料'}</div>
+                    <div class="mt-4 text-slate-600 line-clamp-2 border-t border-gray-100 pt-3">
+                        <span class="font-bold text-slate-800">產業地位：</span>${item['產業地位'] || '無資料'}
                     </div>
                 </div>
-            `;
+            `, 'industryPagination');
         }
 
-        // === 渲染：研究報告 ===
+        // === 2. 研究報告渲染 ===
         function renderReports() {
             const key = document.getElementById('searchReport').value.toLowerCase();
             const ind = document.getElementById('filterReportInd').value;
@@ -398,235 +423,184 @@
 
             const filtered = DB.reports.filter(item => {
                 const str = (item['公司'] + item['股號'] + item['精簡重點摘要']).toLowerCase();
-                return str.includes(key) && 
-                       (ind === '' || item['產業'] === ind) &&
-                       (rate === '' || item['投資評等'] === rate);
+                return str.includes(key) && (ind === '' || item['產業'] === ind) && (rate === '' || item['投資評等'] === rate);
             });
 
-            renderList('reportsList', filtered, renderReportCard, 'reportsPagination');
-        }
+            renderList('reportsList', filtered, (item) => {
+                let rateColor = 'bg-gray-100 text-gray-600';
+                if(item['投資評等']?.includes('買') || item['投資評等']?.includes('Buy')) rateColor = 'bg-red-100 text-red-700 border border-red-200';
+                
+                // 星星處理：防止溢出
+                let stars = item['重要性'] || '⭐⭐';
+                // 如果星星太多，截斷顯示
+                if(stars.length > 5) stars = '⭐⭐⭐⭐⭐'; 
 
-        function renderReportCard(item) {
-            let rateColor = 'bg-slate-100 text-slate-600';
-            if(item['投資評等']?.includes('買') || item['投資評等']?.includes('Buy')) rateColor = 'bg-red-50 text-red-600 border border-red-100';
-            
-            return `
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-lg transition cursor-pointer flex flex-col h-full" onclick="openModal('report', this.dataset.json)" data-json='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-xs font-bold bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${item['產業'] || '未分類'}</span>
-                        <span class="text-sm text-slate-400">${item['報告日期']}</span>
+                return `
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition cursor-pointer flex flex-col h-full" onclick="openModal('report', this.dataset.json)" data-json='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="text-xs font-bold bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${item['產業']}</span>
+                        <span class="text-sm font-bold text-slate-400 font-mono">${item['報告日期']}</span>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-800 mb-1 flex items-center gap-2">
-                        ${item['公司']} <span class="text-sm font-normal text-slate-400 bg-slate-100 px-2 rounded">${item['股號']}</span>
+                    <h3 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                        ${item['公司']} <span class="text-sm font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded font-mono">${item['股號']}</span>
                     </h3>
-                    <div class="flex items-center gap-2 mb-4 text-sm">
-                        <span class="text-yellow-500">${item['重要性'] || '⭐⭐'}</span>
-                        <span class="text-slate-300">|</span>
-                        <span class="font-medium text-slate-600">${item['券商']}</span>
+                    
+                    <div class="flex flex-wrap items-center gap-2 mb-4 text-sm">
+                        <span class="text-yellow-500 text-lg star-container" title="${stars}">${stars}</span>
+                        <span class="text-gray-300">|</span>
+                        <span class="font-bold text-slate-600 truncate max-w-[100px]">${item['券商']}</span>
                         <span class="ml-auto px-3 py-0.5 rounded font-bold text-xs ${rateColor}">${item['投資評等'] || 'N/A'}</span>
                     </div>
-                    <p class="text-slate-600 text-base line-clamp-3 leading-relaxed mb-4 flex-grow">
-                        ${item['精簡重點摘要'] || '暫無摘要'}
-                    </p>
-                    <div class="pt-4 border-t border-slate-100 flex justify-between items-center">
-                        <div class="text-sm text-slate-500">目標價: <span class="font-bold text-slate-800 text-lg">${item['目標價'] || '--'}</span></div>
-                        <button class="text-blue-600 font-medium text-sm hover:underline">閱讀詳情 &rarr;</button>
+
+                    <div class="bg-slate-50 p-3 rounded-lg mb-4 border border-slate-100 flex-grow">
+                        <p class="text-slate-700 text-base leading-relaxed line-clamp-3">
+                            ${item['精簡重點摘要'] || '暫無摘要'}
+                        </p>
                     </div>
-                </div>
-            `;
+
+                    <div class="pt-3 border-t border-gray-100 flex justify-between items-center">
+                        <div class="text-sm text-gray-500 font-bold">目標價: <span class="font-bold text-slate-900 text-xl">${item['目標價'] || '--'}</span></div>
+                        <button class="text-blue-600 font-bold text-sm hover:underline">閱讀詳情 &rarr;</button>
+                    </div>
+                </div>`;
+            }, 'reportsPagination');
         }
 
-        // === 渲染：外資快訊 (News) ===
+        // === 3. 外資快訊渲染 (修復重點) ===
         function renderNews() {
             const key = document.getElementById('searchNews').value.toLowerCase();
-            
-            // 假設 News 欄位有：日期, 標題, 內容, 標籤 (如果沒有，會顯示 undefined，可以接受)
             const filtered = DB.news.filter(item => {
-                const str = Object.values(item).join(' ').toLowerCase();
-                return str.includes(key);
+                // 針對 CSV 欄位做容錯搜尋
+                const title = item['標題'] || item['Title'] || '';
+                const content = item['內容'] || item['Content'] || '';
+                const tag = item['標籤'] || item['Tag'] || '';
+                return (title+content+tag).toLowerCase().includes(key);
             });
 
-            renderList('newsList', filtered, renderNewsRow, 'newsPagination');
-        }
+            renderList('newsList', filtered, (item) => {
+                // 欄位對應 (Mapping)
+                const title = item['標題'] || item['Title'] || '無標題';
+                const date = item['日期'] || item['Date'] || '--';
+                const content = item['內容'] || item['Content'] || '無內容';
+                const tags = item['標籤'] ? item['標籤'].split(' ').map(t=>`<span class="tag-pill">${t}</span>`).join('') : '';
+                const source = item['來源'] || '市場消息';
 
-        function renderNewsRow(item) {
-            // 嘗試抓取欄位 (容錯)
-            const title = item['標題'] || item['Title'] || item['新聞標題'] || '無標題';
-            const date = item['日期'] || item['Date'] || item['時間'] || '--';
-            const content = item['內容'] || item['Content'] || item['摘要'] || '';
-            const tag = item['標籤'] || item['Tag'] || '市場動態';
-
-            return `
-                <div class="bg-white p-5 rounded-xl border border-slate-100 hover:border-red-200 transition cursor-pointer" onclick="openModal('news', this.dataset.json)" data-json='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
-                    <div class="flex flex-col md:flex-row md:items-center gap-4">
-                        <div class="w-24 flex-shrink-0 text-sm text-slate-400 font-mono">${date}</div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-1">
-                                <span class="bg-red-50 text-red-600 text-xs px-2 py-0.5 rounded font-bold border border-red-100">${tag}</span>
-                                <h4 class="text-lg font-bold text-slate-800 hover:text-red-600 transition">${title}</h4>
-                            </div>
-                            <p class="text-slate-600 text-base line-clamp-1">${content}</p>
+                return `
+                <div class="bg-white p-6 rounded-xl border border-gray-200 hover:border-red-300 hover:shadow-md transition cursor-pointer group" onclick="openModal('news', this.dataset.json)" data-json='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="w-32 flex-shrink-0">
+                            <div class="text-sm font-bold text-gray-400 font-mono mb-1">${date}</div>
+                            <div class="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded inline-block">${source}</div>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-slate-300"></i>
+                        <div class="flex-1">
+                            <h4 class="text-xl font-bold text-slate-900 mb-2 group-hover:text-red-600 transition">${title}</h4>
+                            <p class="text-slate-600 text-base line-clamp-2 mb-3">${content}</p>
+                            <div class="flex flex-wrap gap-2">${tags}</div>
+                        </div>
+                        <div class="flex items-center justify-center">
+                            <i class="fa-solid fa-chevron-right text-gray-300 text-xl group-hover:text-red-400"></i>
+                        </div>
                     </div>
-                </div>
-            `;
-        }
-
-        // === 通用列表渲染器 (含分頁) ===
-        function renderList(containerId, data, renderFunc, paginationId) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-
-            if(data.length === 0) {
-                container.innerHTML = `<div class="text-center py-12 text-slate-400 text-lg">沒有找到資料</div>`;
-                document.getElementById(paginationId).innerHTML = '';
-                return;
-            }
-
-            const start = (APP.page - 1) * PAGE_SIZE;
-            const end = start + PAGE_SIZE;
-            const pageData = data.slice(start, end);
-
-            pageData.forEach(item => {
-                container.insertAdjacentHTML('beforeend', renderFunc(item));
-            });
-
-            renderPagination(paginationId, data.length);
+                </div>`;
+            }, 'newsPagination');
         }
 
         function renderPagination(id, total) {
             const container = document.getElementById(id);
-            const totalPages = Math.ceil(total / PAGE_SIZE);
-            
-            if(totalPages <= 1) {
-                container.innerHTML = '';
-                return;
-            }
+            const pages = Math.ceil(total / PAGE_SIZE);
+            if(pages <= 1) { container.innerHTML = ''; return; }
 
             let html = '';
-            // 簡單分頁：上一頁 1 ... 當前 ... 末頁 下一頁
-            if(APP.page > 1) html += `<button onclick="changePage('${id}', ${APP.page-1})" class="w-10 h-10 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"><</button>`;
-            
-            html += `<span class="px-4 h-10 flex items-center bg-white border border-slate-200 rounded-lg text-slate-600 font-bold">第 ${APP.page} / ${totalPages} 頁</span>`;
-
-            if(APP.page < totalPages) html += `<button onclick="changePage('${id}', ${APP.page+1})" class="w-10 h-10 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100">></button>`;
-
+            if(APP.page > 1) html += `<button onclick="APP.page--; refreshCurrentView()" class="w-10 h-10 rounded-lg bg-white border border-gray-300 text-gray-600 hover:bg-gray-100 font-bold"><</button>`;
+            html += `<span class="px-4 h-10 flex items-center bg-white border border-gray-300 rounded-lg text-gray-700 font-bold">第 ${APP.page} / ${pages} 頁</span>`;
+            if(APP.page < pages) html += `<button onclick="APP.page++; refreshCurrentView()" class="w-10 h-10 rounded-lg bg-white border border-gray-300 text-gray-600 hover:bg-gray-100 font-bold">></button>`;
             container.innerHTML = html;
         }
 
-        function changePage(pagId, newPage) {
-            APP.page = newPage;
-            // 根據 ID 判斷重繪哪個區塊
-            if(pagId === 'industryPagination') renderIndustry();
-            else if(pagId === 'reportsPagination') renderReports();
-            else if(pagId === 'newsPagination') renderNews();
-            
-            // 滾動到列表頂部
+        function refreshCurrentView() {
+            if(APP.currentView === 'industry') renderIndustry();
+            if(APP.currentView === 'reports') renderReports();
+            if(APP.currentView === 'news') renderNews();
             document.getElementById('mainContainer').scrollTo({top: 0, behavior: 'smooth'});
         }
 
-        // === 詳細視窗 (Modal) ===
+        // === Modal 詳細頁 (高對比文字) ===
         function openModal(type, jsonStr) {
             const item = JSON.parse(jsonStr);
             const modal = document.getElementById('detailModal');
-            const content = document.getElementById('mContent');
             
-            // 設定顏色與標題
-            let headerColor = 'border-slate-800';
-            let category = '';
-            let title = '';
-            let sub1 = '';
-            let sub2 = '';
+            const domCat = document.getElementById('mCategory');
+            const domTitle = document.getElementById('mTitle');
+            const domSub1 = document.getElementById('mSubtitle1');
+            const domSub2 = document.getElementById('mSubtitle2');
+            const domContent = document.getElementById('mContent');
+
             let html = '';
 
-            if (type === 'industry') {
-                category = '產業百科';
-                title = item['名稱'] + ` (${item['代號']})`;
-                sub1 = item['產業'];
-                sub2 = item['細產業'];
+            if(type === 'report') {
+                domCat.innerText = "投資研究報告";
+                domCat.className = "text-sm font-bold uppercase mb-2 block px-3 py-1 rounded w-fit bg-yellow-100 text-yellow-800";
+                domTitle.innerText = `${item['公司']} (${item['股號']})`;
+                domSub1.innerText = item['券商'];
+                domSub2.innerText = item['報告日期'];
+
+                // 報告詳細內容
+                html += `<div class="grid grid-cols-3 gap-4 mb-8">
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 text-center"><div class="text-xs text-gray-500 font-bold">評等</div><div class="text-xl font-bold text-slate-900">${item['投資評等']}</div></div>
+                    <div class="p-4 bg-green-50 rounded-lg border border-green-200 text-center"><div class="text-xs text-green-700 font-bold">目標價</div><div class="text-xl font-bold text-green-700">${item['目標價']}</div></div>
+                    <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-center"><div class="text-xs text-yellow-700 font-bold">重要性</div><div class="text-xl text-yellow-500 overflow-hidden whitespace-nowrap">${item['重要性']}</div></div>
+                </div>`;
                 
-                // 產業內容
-                html += makeSection('產業地位與產品', item['產業地位'], 'text-blue-800', 'bg-blue-50');
-                // 這裡可以嘗試顯示該公司的所有報告連結 (進階功能)
-                const relReports = DB.reports.filter(r => r['股號'] == item['代號']);
-                if(relReports.length > 0) {
-                    html += `<div class="mt-6"><h4 class="font-bold text-lg mb-3 text-slate-800">相關研究報告 (${relReports.length})</h4><div class="grid gap-3">`;
-                    relReports.forEach(r => {
-                        html += `<div class="p-3 bg-yellow-50 border border-yellow-100 rounded hover:bg-yellow-100 cursor-pointer" onclick="openReportFromModal(${r.id})">
-                            <span class="text-xs text-slate-400 mr-2">${r['報告日期']}</span>
-                            <span class="text-slate-700 font-medium">${r['券商']} - ${r['投資評等']}</span>
-                        </div>`;
-                    });
-                    html += `</div></div>`;
+                const makeSection = (title, text, color='blue') => {
+                    if(!text) return '';
+                    return `<div class="mb-8">
+                        <h4 class="text-lg font-bold text-slate-900 mb-3 border-l-4 border-${color}-500 pl-3">${title}</h4>
+                        <div class="text-body text-lg text-slate-700 bg-gray-50 p-5 rounded-xl border border-gray-200">${text.replace(/\n/g, '<br>')}</div>
+                    </div>`;
+                };
+
+                html += makeSection('精簡重點摘要', item['精簡重點摘要'], 'blue');
+                html += makeSection('營運重點', item['營運重點'], 'green');
+                html += makeSection('Rex 大叔觀察', item['Rex觀察'], 'yellow');
+
+            } else if(type === 'news') {
+                domCat.innerText = "外資市場快訊";
+                domCat.className = "text-sm font-bold uppercase mb-2 block px-3 py-1 rounded w-fit bg-red-100 text-red-800";
+                domTitle.innerText = item['標題'] || item['Title'];
+                domSub1.innerText = item['來源'] || '市場';
+                domSub2.innerText = item['日期'] || item['Date'];
+
+                const content = item['內容'] || item['Content'] || '';
+                html += `<div class="text-lg text-slate-800 leading-loose whitespace-pre-line font-medium">${content}</div>`;
+                
+                if(item['標籤']) {
+                    html += `<div class="mt-8 pt-4 border-t border-gray-200 flex gap-2">
+                        ${item['標籤'].split(' ').map(t=>`<span class="bg-gray-200 text-gray-700 px-3 py-1 rounded font-bold text-sm">#${t.replace('#','')}</span>`).join('')}
+                    </div>`;
                 }
 
-            } else if (type === 'report') {
-                category = '投資研究報告';
-                headerColor = 'border-yellow-500';
-                title = item['公司'] + ` (${item['股號']})`;
-                sub1 = item['券商'] + (item['分析師'] ? ` - ${item['分析師']}` : '');
-                sub2 = item['報告日期'];
-
-                // 報告內容
-                html += `<div class="grid grid-cols-3 gap-4 mb-6">
-                    <div class="p-4 bg-slate-50 rounded text-center"><div class="text-xs text-slate-400">評等</div><div class="font-bold text-xl text-slate-800">${item['投資評等']}</div></div>
-                    <div class="p-4 bg-slate-50 rounded text-center"><div class="text-xs text-slate-400">目標價</div><div class="font-bold text-xl text-green-600">${item['目標價']}</div></div>
-                    <div class="p-4 bg-slate-50 rounded text-center"><div class="text-xs text-slate-400">重要性</div><div class="font-bold text-xl text-yellow-500">${item['重要性']}</div></div>
+            } else { // Industry
+                domCat.innerText = "產業百科";
+                domCat.className = "text-sm font-bold uppercase mb-2 block px-3 py-1 rounded w-fit bg-blue-100 text-blue-800";
+                domTitle.innerText = `${item['名稱']} (${item['代號']})`;
+                domSub1.innerText = item['產業'];
+                domSub2.innerText = item['細產業'];
+                
+                html += `<div class="mb-6">
+                    <h4 class="text-lg font-bold text-slate-900 mb-3 border-l-4 border-blue-500 pl-3">產業地位與產品</h4>
+                    <div class="text-lg text-slate-700 leading-relaxed bg-blue-50 p-6 rounded-xl border border-blue-100 font-medium">
+                        ${item['產業地位'] || '無資料'}
+                    </div>
                 </div>`;
-
-                html += makeSection('精簡重點摘要', item['精簡重點摘要'], 'text-slate-800', 'bg-white border-l-4 border-slate-300');
-                html += makeSection('營運重點', item['營運重點'], 'text-slate-800', 'bg-white border-l-4 border-green-400');
-                html += makeSection('策略方向', item['策略方向'], 'text-slate-800', 'bg-white border-l-4 border-blue-400');
-                html += makeSection('Rex 大叔觀察', item['Rex觀察'], 'text-slate-900', 'bg-yellow-50 border border-yellow-200 p-6'); // 特別強調
-
-            } else if (type === 'news') {
-                category = '外資快訊';
-                headerColor = 'border-red-500';
-                title = item['標題'] || item['Title'] || '無標題';
-                sub1 = item['日期'] || '--';
-                sub2 = item['標籤'] || '市場消息';
-
-                const newsContent = item['內容'] || item['Content'] || '';
-                html += `<div class="text-read text-slate-700 whitespace-pre-line">${newsContent}</div>`;
             }
 
-            // 更新 DOM
-            document.getElementById('mCategory').innerText = category;
-            document.getElementById('mCategory').className = `text-sm font-bold tracking-wider uppercase mb-1 block ${type==='report'?'text-yellow-600':(type==='news'?'text-red-500':'text-blue-500')}`;
-            
-            document.getElementById('mTitle').innerText = title;
-            document.getElementById('mSubtitle1').innerText = sub1;
-            document.getElementById('mSubtitle2').innerText = sub2;
-            content.innerHTML = html;
-
+            domContent.innerHTML = html;
             modal.classList.remove('hidden');
-        }
-
-        function makeSection(title, content, textColor, containerClass) {
-            if(!content) return '';
-            // 簡單處理換行
-            const formatted = content.replace(/\n/g, '<br>');
-            return `
-                <div class="${containerClass} rounded-lg p-4 mb-6">
-                    <h4 class="font-bold text-lg mb-3 text-slate-400 uppercase tracking-wide border-b pb-1">${title}</h4>
-                    <div class="${textColor} text-read">${formatted}</div>
-                </div>
-            `;
-        }
-
-        // 從 Modal 裡面跳轉看報告
-        function openReportFromModal(reportId) {
-            // 這裡比較簡化，直接重新渲染一次 Modal
-            // 實務上需要從 DB.reports 裡找這個 ID (假設我們在讀取時有給 ID)
-            // 這裡暫時不實作細節，避免代碼過於複雜
-            alert("請在列表搜尋該報告以查看詳情 (功能開發中)");
         }
 
         function closeModal() {
             document.getElementById('detailModal').classList.add('hidden');
         }
-
     </script>
 </body>
 </html>
