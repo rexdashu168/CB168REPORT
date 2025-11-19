@@ -3,464 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rex Alpha 雲端投資戰情室 V2.0</title>
+    <title>Rex大叔的168台股投資教室 - 戰情中心</title>
+    
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
-        body { font-family: 'Microsoft JhengHei', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #0b1120; color: #e2e8f0; }
-        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2); }
-        .scroller::-webkit-scrollbar { width: 6px; }
-        .scroller::-webkit-scrollbar-track { background: #0f172a; }
-        .scroller::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        .scroller::-webkit-scrollbar-thumb:hover { background: #475569; }
-        
-        /* 點擊互動優化 */
-        .clickable-card { transition: all 0.2s ease; cursor: pointer; }
-        .clickable-card:hover { transform: translateY(-2px); border-color: rgba(56, 189, 248, 0.5); box-shadow: 0 10px 40px -10px rgba(56, 189, 248, 0.15); }
-        .active-report { border-left: 4px solid #38bdf8; background: rgba(30, 41, 59, 0.9); }
-        
-        @keyframes pulse-glow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .loading-pulse { animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        body { background-color: #f3f4f6; font-family: "Microsoft JhengHei", sans-serif; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.15); }
+        .loading-spinner { border-top-color: #3b82f6; animation: spinner 1s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body>
-    <div id="root"></div>
+<body class="text-gray-800">
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
-
-        // 設定檔案路徑
-        const FILES = {
-            REPORTS: './reports.xlsx',
-            INDUSTRY: './industry.xlsx',
-            NEWS: './news.xlsx'
-        };
-
-        // 圖標組件
-        const Icon = ({ name, size = 16, className }) => {
-            const icons = {
-                search: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
-                fileText: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>,
-                trendingUp: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
-                star: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-400"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
-                refresh: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>,
-                arrowRight: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            };
-            return <span className={`inline-flex items-center justify-center ${className}`}>{icons[name]}</span>;
-        };
-
-        // 星級顯示
-        const StarRating = ({ rating }) => {
-            if (!rating) return null;
-            const stars = typeof rating === 'string' && rating.includes('⭐') ? rating.match(/⭐/g).length : 0;
-            return <div className="flex text-yellow-400">{[...Array(stars)].map((_, i) => <Icon key={i} name="star" size={14} />)}</div>;
-        };
-
-        // 標籤顯示
-        const TagList = ({ tags }) => {
-            if (!tags) return null;
-            const tagArray = tags.toString().split(' ').filter(t => t.startsWith('#'));
-            return (
-                <div className="flex flex-wrap gap-2 mt-2">
-                    {tagArray.map((tag, i) => (
-                        <span key={i} className="px-2 py-1 text-xs bg-cyan-950 text-cyan-300 rounded border border-cyan-800 hover:bg-cyan-900 transition-colors cursor-default select-none">
-                            {tag}
-                        </span>
-                    ))}
+    <nav class="bg-gray-900 text-white sticky top-0 z-50 shadow-xl">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-yellow-500 text-gray-900 p-2 rounded-lg">
+                    <i class="fa-solid fa-chart-pie text-xl"></i>
                 </div>
-            );
-        };
+                <span class="text-xl font-bold tracking-wider">Rex大叔投資教室</span>
+            </div>
+            <div class="hidden md:block text-sm text-gray-400">Excel 自動串接修復版 v1.0</div>
+        </div>
+    </nav>
 
-        // 詳細資料彈窗 (含內部狀態管理以切換報告)
-        const StockDetailView = ({ stockCode, industryData, reportsData, newsData, onClose }) => {
-            const industryInfo = industryData.find(i => String(i['代號']) === String(stockCode)) || {};
-            // 取得所有相關報告並按日期排序（假設資料庫日期格式正確，若需嚴格排序需另加邏輯）
-            const stockReports = reportsData.filter(r => String(r['股號']) === String(stockCode));
-            const stockNews = newsData.filter(n => String(n['股號']) === String(stockCode));
+    <div class="container mx-auto px-4 py-8">
+        
+        <div class="bg-white rounded-xl shadow p-6 mb-8 border-l-4 border-yellow-500">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1 relative">
+                    <i class="fa-solid fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="輸入股號或公司名稱 (例如: 2330, 台積電)..." class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none">
+                </div>
+                <select id="industryFilter" class="md:w-64 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none bg-white">
+                    <option value="">全市場產業</option>
+                    </select>
+            </div>
+        </div>
+
+        <div id="statusMsg" class="text-center py-12">
+            <div class="inline-block loading-spinner rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+            <p class="text-gray-500 text-lg">正在讀取 Excel 檔案並進行資料修復中...</p>
+        </div>
+
+        <div id="reportList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+            </div>
+
+    </div>
+
+    <script>
+        // 設定您的 Excel 檔名 (需確保上傳到 GitHub 後是這些名字)
+        const FILE_REPORTS = 'reports.xlsx';
+        const FILE_INDUSTRY = 'industry.xlsx';
+
+        let allReports = [];
+        let industryMap = {}; // 用來存放「股號 -> 正確產業」的對照表
+
+        // 網頁載入後執行
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // 1. 讀取兩個 Excel 檔案 (ArrayBuffer 格式)
+                const [industryData, reportsData] = await Promise.all([
+                    fetch(FILE_INDUSTRY).then(res => {
+                        if(!res.ok) throw new Error("找不到 industry.xlsx");
+                        return res.arrayBuffer();
+                    }),
+                    fetch(FILE_REPORTS).then(res => {
+                        if(!res.ok) throw new Error("找不到 reports.xlsx");
+                        return res.arrayBuffer();
+                    })
+                ]);
+
+                // 2. 處理 Industry 檔案 (建立對照表)
+                const industryWorkbook = XLSX.read(industryData);
+                const industrySheet = industryWorkbook.Sheets[industryWorkbook.SheetNames[0]];
+                // sheet_to_json 會自動把第一行當作標題 (代號, 名稱, 產業...)
+                const industryJson = XLSX.utils.sheet_to_json(industrySheet);
+
+                industryJson.forEach(row => {
+                    // 確保股號存在且轉為字串比對
+                    if (row['代號']) {
+                        const stockId = row['代號'].toString().trim();
+                        industryMap[stockId] = {
+                            industry: row['產業'] || '未分類',
+                            subIndustry: row['細產業'] || '',
+                            name: row['名稱'] // 順便存正確名稱
+                        };
+                    }
+                });
+                console.log('產業對照表建立完成，共', Object.keys(industryMap).length, '筆');
+
+                // 3. 處理 Reports 檔案 (進行資料修復)
+                const reportsWorkbook = XLSX.read(reportsData);
+                const reportsSheet = reportsWorkbook.Sheets[reportsWorkbook.SheetNames[0]];
+                const reportsJson = XLSX.utils.sheet_to_json(reportsSheet);
+
+                // 開始清洗資料
+                allReports = reportsJson.map(report => {
+                    const stockId = report['股號'] ? report['股號'].toString().trim() : '';
+                    
+                    // ★★★ 關鍵修復邏輯 ★★★
+                    let finalIndustry = report['產業']; // 預設用原本的 (即使是錯的)
+                    let finalSubIndustry = '';
+                    let isLinked = false;
+
+                    // 如果這筆報告的股號，在我們的「對照表」裡找得到
+                    if (stockId && industryMap[stockId]) {
+                        // 就用對照表裡的正確資料覆蓋它！
+                        finalIndustry = industryMap[stockId].industry;
+                        finalSubIndustry = industryMap[stockId].subIndustry;
+                        isLinked = true;
+                    }
+
+                    // 如果原本就是錯的(例如寫成個股名)，且找不到對照，就標記為「待確認」
+                    // 這裡做個簡單判斷：如果產業欄位跟公司名稱一樣，通常就是填錯了
+                    if (!isLinked && report['產業'] === report['公司']) {
+                         finalIndustry = '產業未分類';
+                    }
+
+                    return {
+                        ...report,
+                        '產業': finalIndustry,
+                        '細產業': finalSubIndustry,
+                        '股號': stockId
+                    };
+                });
+
+                // 4. 渲染畫面
+                initFilters();
+                renderData(allReports);
+                
+                // 隱藏讀取中，顯示內容
+                document.getElementById('statusMsg').classList.add('hidden');
+                document.getElementById('reportList').classList.remove('hidden');
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('statusMsg').innerHTML = `
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 inline-block text-left">
+                        <p class="font-bold">讀取失敗</p>
+                        <p>請確認以下幾點：</p>
+                        <ul class="list-disc pl-5 mt-2">
+                            <li>檔案名稱是否為 reports.xlsx 和 industry.xlsx</li>
+                            <li>這兩個檔案是否已上傳到 GitHub 同一目錄</li>
+                            <li>如果在本機測試，需要使用 Live Server (因為瀏覽器安全限制)</li>
+                        </ul>
+                        <p class="mt-2 text-sm text-gray-500">錯誤訊息: ${err.message}</p>
+                    </div>
+                `;
+            }
+        });
+
+        // 初始化產業篩選選單
+        function initFilters() {
+            const industrySet = new Set();
+            allReports.forEach(r => {
+                if (r['產業']) industrySet.add(r['產業']);
+            });
             
-            // 管理目前顯示哪一份報告 (預設顯示第一份/最新)
-            const [currentReport, setCurrentReport] = useState(stockReports.length > 0 ? stockReports[0] : null);
+            const select = document.getElementById('industryFilter');
+            Array.from(industrySet).sort().forEach(ind => {
+                const opt = document.createElement('option');
+                opt.value = ind;
+                opt.textContent = ind;
+                select.appendChild(opt);
+            });
 
-            return (
-                <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-hidden" onClick={onClose}>
-                    <div className="bg-[#0f172a] w-full max-w-7xl max-h-[95vh] rounded-2xl border border-slate-700 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 ring-1 ring-white/10" onClick={e => e.stopPropagation()}>
-                        
-                        {/* 1. 標頭區：對齊修復 */}
-                        <div className="p-5 border-b border-slate-700 bg-[#1e293b] flex justify-between items-center shrink-0">
-                            <div className="flex items-center gap-4 overflow-hidden">
-                                {/* 股號 Box */}
-                                <div className="bg-blue-600 text-white font-black text-2xl px-3 py-2 rounded-lg shadow-lg shadow-blue-500/20 shrink-0 font-mono">
-                                    {stockCode}
-                                </div>
-                                {/* 名稱與產業 */}
-                                <div className="flex flex-col justify-center">
-                                    <div className="flex items-center gap-3">
-                                        <h2 className="text-2xl font-bold text-white tracking-wide whitespace-nowrap">
-                                            {industryInfo['名稱'] || currentReport?.['公司'] || '詳細資料'}
-                                        </h2>
-                                        {industryInfo['產業'] && (
-                                            <span className="px-2 py-0.5 bg-slate-700 border border-slate-600 text-slate-300 text-xs rounded-full whitespace-nowrap">
-                                                {industryInfo['產業']}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="text-blue-400 text-sm mt-0.5 truncate max-w-md">
-                                        {industryInfo['產業地位'] || '資料庫中無產業地位描述'}
-                                    </div>
-                                </div>
-                            </div>
-                            <button onClick={onClose} className="text-slate-400 hover:text-white hover:bg-slate-700/50 p-2 rounded-full transition-all shrink-0">
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            </button>
+            // 綁定搜尋事件
+            document.getElementById('searchInput').addEventListener('input', filterData);
+            select.addEventListener('change', filterData);
+        }
+
+        // 資料過濾邏輯
+        function filterData() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            const industry = document.getElementById('industryFilter').value;
+
+            const filtered = allReports.filter(item => {
+                const matchKeyword = (
+                    (item['公司'] && item['公司'].toString().toLowerCase().includes(keyword)) ||
+                    (item['股號'] && item['股號'].toString().includes(keyword)) ||
+                    (item['精簡重點摘要'] && item['精簡重點摘要'].toString().toLowerCase().includes(keyword))
+                );
+                const matchIndustry = industry === '' || item['產業'] === industry;
+                return matchKeyword && matchIndustry;
+            });
+
+            renderData(filtered);
+        }
+
+        // 渲染卡片
+        function renderData(data) {
+            const container = document.getElementById('reportList');
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-gray-500">沒有找到符合的資料</div>';
+                return;
+            }
+
+            data.forEach(item => {
+                // 處理標籤
+                let tagsHtml = '';
+                if (item['標籤']) {
+                    tagsHtml = item['標籤'].toString().split('#')
+                        .filter(t => t.trim())
+                        .map(t => `<span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1 mb-1">#${t.trim()}</span>`)
+                        .join('');
+                }
+
+                // 處理細產業顯示
+                let subIndHtml = '';
+                if (item['細產業']) {
+                    subIndHtml = `<span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded mb-2">${item['細產業']}</span>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-xl shadow border border-gray-100 p-5 card-hover flex flex-col';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="bg-gray-800 text-white text-xs py-1 px-2 rounded font-bold">${item['產業']}</span>
+                        <span class="text-gray-400 text-xs">${item['報告日期'] || ''}</span>
+                    </div>
+                    
+                    <div class="mb-1">
+                        <h3 class="text-xl font-bold text-gray-800">${item['公司'] || '未知公司'} <span class="text-gray-500 text-sm">(${item['股號'] || 'N/A'})</span></h3>
+                    </div>
+                    
+                    ${subIndHtml}
+
+                    <div class="flex items-center gap-2 mb-4 text-sm text-gray-600">
+                        <span class="text-yellow-500 font-bold">${item['重要性'] || '⭐⭐⭐'}</span>
+                        <span class="border-l pl-2">${item['券商'] || '綜合'}</span>
+                        ${item['投資評等'] ? `<span class="bg-red-100 text-red-600 px-2 py-0.5 rounded text-xs font-bold">${item['投資評等']}</span>` : ''}
+                    </div>
+
+                    <div class="mb-4 flex-grow">
+                        <p class="text-gray-600 text-sm line-clamp-3 hover:line-clamp-none transition-all cursor-pointer bg-gray-50 p-3 rounded">
+                            ${item['精簡重點摘要'] || '暫無摘要內容...'}
+                        </p>
+                    </div>
+
+                    <div class="mt-auto pt-3 border-t border-gray-100">
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            ${tagsHtml}
                         </div>
-
-                        {/* 內容區塊 */}
-                        <div className="flex-1 overflow-y-auto scroller p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 bg-[#0b1120]">
-                            
-                            {/* 左側：深度分析 (5欄) - 內容隨 currentReport 改變 */}
-                            <div className="lg:col-span-5 space-y-5">
-                                <div className="flex items-center gap-2 text-blue-400 border-b border-blue-900/30 pb-2">
-                                    <Icon name="fileText" size={20} />
-                                    <h3 className="text-lg font-bold">深度研究分析</h3>
-                                </div>
-
-                                {currentReport ? (
-                                    <div className="space-y-5 animate-in slide-in-from-left-4 duration-300" key={currentReport['報告日期'] + currentReport['券商']}> {/* Key確保切換時有動畫 */}
-                                        {/* 核心數據卡 */}
-                                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-5 rounded-xl border border-slate-700 shadow-lg relative overflow-hidden">
-                                            <div className="flex justify-between items-start mb-4 relative z-10">
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-emerald-400 font-mono text-sm font-bold">{currentReport['報告日期']}</span>
-                                                        <span className="text-slate-500">|</span>
-                                                        <span className="text-slate-200 font-bold">{currentReport['券商']}</span>
-                                                    </div>
-                                                    <div className="text-xs text-slate-400">{currentReport['分析師']}</div>
-                                                </div>
-                                                <StarRating rating={currentReport['重要性']} />
-                                            </div>
-                                            
-                                            <div className="grid grid-cols-2 gap-3 mb-4 relative z-10">
-                                                <div className="bg-black/20 p-3 rounded border border-white/5">
-                                                    <div className="text-slate-500 text-[10px] uppercase mb-1 tracking-wider">Rating</div>
-                                                    <div className={`text-lg font-black ${currentReport['投資評等']?.includes('Buy') || currentReport['投資評等']?.includes('買') ? 'text-red-400' : 'text-yellow-400'}`}>
-                                                        {currentReport['投資評等']}
-                                                    </div>
-                                                </div>
-                                                <div className="bg-black/20 p-3 rounded border border-white/5">
-                                                    <div className="text-slate-500 text-[10px] uppercase mb-1 tracking-wider">Target Price</div>
-                                                    <div className="text-lg font-black text-emerald-400">{currentReport['目標價']}</div>
-                                                </div>
-                                            </div>
-
-                                            {currentReport['Rex觀察'] && (
-                                                <div className="bg-indigo-900/20 p-3 rounded border border-indigo-500/20 relative z-10">
-                                                    <h4 className="text-indigo-400 font-bold text-xs mb-1 flex items-center gap-1">
-                                                        <Icon name="star" size={12} /> Rex 觀點
-                                                    </h4>
-                                                    <p className="text-indigo-100 text-sm leading-relaxed whitespace-pre-line">{currentReport['Rex觀察']}</p>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* 詳細文字區塊 */}
-                                        <div className="space-y-3">
-                                            {[
-                                                { t: "重點摘要", c: currentReport['精簡重點摘要'], color: "text-slate-200" },
-                                                { t: "關鍵財務", c: currentReport['關鍵財務數據'], color: "text-yellow-100 font-mono text-sm" },
-                                                { t: "營運重點", c: currentReport['營運重點'], color: "text-slate-300" },
-                                                { t: "策略方向", c: currentReport['策略方向'], color: "text-slate-300" },
-                                                { t: "QA 摘要", c: currentReport['重要QA摘要'], color: "text-slate-400 italic" }
-                                            ].map((item, idx) => (
-                                                item.c && (
-                                                    <div key={idx} className="bg-slate-800/40 p-4 rounded-lg border border-slate-700/50">
-                                                        <h4 className="text-blue-400/70 text-[10px] font-bold mb-2 uppercase tracking-widest">{item.t}</h4>
-                                                        <p className={`${item.color} text-sm leading-relaxed whitespace-pre-line`}>{item.c}</p>
-                                                    </div>
-                                                )
-                                            ))}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="p-8 text-center border-2 border-dashed border-slate-800 rounded-xl">
-                                        <p className="text-slate-600">此公司尚無深度報告紀錄</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* 中間：外電新聞 (4欄) */}
-                            <div className="lg:col-span-4 space-y-5">
-                                <div className="flex items-center gap-2 text-purple-400 border-b border-purple-900/30 pb-2">
-                                    <Icon name="trendingUp" size={20} />
-                                    <h3 className="text-lg font-bold">外電與動態</h3>
-                                </div>
-                                
-                                <div className="space-y-3 max-h-[800px] overflow-y-auto scroller pr-1">
-                                    {stockNews.length > 0 ? stockNews.map((news, idx) => (
-                                        <div key={idx} className="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 hover:bg-slate-800 transition-all group">
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="text-[10px] font-bold text-purple-300 bg-purple-900/40 px-2 py-0.5 rounded uppercase">{news['券商來源']}</span>
-                                                <span className="text-[10px] text-slate-500">{news['日期']}</span>
-                                            </div>
-                                            <h5 className="font-bold text-slate-200 mb-2 text-sm group-hover:text-blue-300 transition-colors">{news['報導重點分類']}</h5>
-                                            <p className="text-slate-400 text-sm mb-3 leading-relaxed">{news['完整報導內容']}</p>
-                                            <div className="flex justify-between items-center pt-2 border-t border-white/5">
-                                                <TagList tags={news['標籤']} />
-                                                <StarRating rating={news['重要性']} />
-                                            </div>
-                                        </div>
-                                    )) : (
-                                        <div className="text-slate-600 text-center py-10 text-sm">尚無外電追蹤</div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* 右側：歷史紀錄 (3欄) - 改為可點擊列表 */}
-                            <div className="lg:col-span-3 space-y-5">
-                                <div className="flex items-center gap-2 text-emerald-400 border-b border-emerald-900/30 pb-2">
-                                    <Icon name="refresh" size={18} />
-                                    <h3 className="text-lg font-bold">歷史報告存檔</h3>
-                                </div>
-                                <div className="space-y-2">
-                                    {stockReports.map((report, idx) => {
-                                        const isActive = currentReport === report;
-                                        return (
-                                            <div 
-                                                key={idx} 
-                                                onClick={() => setCurrentReport(report)}
-                                                className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 relative group ${isActive ? 'active-report border-blue-500' : 'bg-slate-800/30 border-slate-700 hover:bg-slate-800 hover:border-slate-500'}`}
-                                            >
-                                                {/* Active Indicator */}
-                                                {isActive && <div className="absolute right-3 top-3 text-blue-400"><Icon name="arrowRight" size={14}/></div>}
-                                                
-                                                <div className="flex justify-between mb-1">
-                                                    <span className={`text-xs font-mono ${isActive ? 'text-blue-300 font-bold' : 'text-emerald-500/80'}`}>{report['報告日期']}</span>
-                                                </div>
-                                                <div className="font-bold text-sm text-slate-200 mb-1">{report['券商']}</div>
-                                                <div className="flex items-center gap-2 text-xs mt-2">
-                                                    <span className="text-slate-500">TP: <span className="text-slate-300">{report['目標價']}</span></span>
-                                                    <span className={`px-1.5 py-0.5 rounded text-[10px] ${isActive ? 'bg-blue-900/50 text-blue-200' : 'bg-slate-700 text-slate-400'}`}>{report['投資評等']}</span>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                    {stockReports.length === 0 && <div className="text-slate-600 text-center text-sm">無歷史資料</div>}
-                                </div>
-                            </div>
-
+                        <div class="flex justify-between items-center">
+                            <div class="text-xs text-gray-500">目標價: <span class="font-bold text-gray-900 text-sm">${item['目標價'] || '--'}</span></div>
+                            <button class="text-blue-600 hover:text-blue-800 text-sm font-medium">詳細內容 &rarr;</button>
                         </div>
                     </div>
-                </div>
-            );
-        };
-
-        // 主應用程式
-        const App = () => {
-            const [data, setData] = useState({ reports: [], industry: [], news: [] });
-            const [loading, setLoading] = useState(true);
-            const [error, setError] = useState(null);
-            const [searchTerm, setSearchTerm] = useState('');
-            const [selectedStock, setSelectedStock] = useState(null);
-
-            const fetchExcel = async (url) => {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`無法讀取 ${url}`);
-                const arrayBuffer = await response.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                return XLSX.utils.sheet_to_json(worksheet);
-            };
-
-            const loadAllData = async () => {
-                setLoading(true);
-                setError(null);
-                try {
-                    const [reports, industry, news] = await Promise.all([
-                        fetchExcel(FILES.REPORTS),
-                        fetchExcel(FILES.INDUSTRY),
-                        fetchExcel(FILES.NEWS)
-                    ]);
-                    setData({ reports, industry, news });
-                } catch (err) {
-                    console.error(err);
-                    setError("無法讀取資料庫。請確認 .xlsx 檔案已上傳至 GitHub。");
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            useEffect(() => { loadAllData(); }, []);
-
-            const uniqueStocks = useMemo(() => {
-                const stocks = new Set();
-                data.reports.forEach(r => r['股號'] && stocks.add(String(r['股號'])));
-                data.industry.forEach(i => i['代號'] && stocks.add(String(i['代號'])));
-                data.news.forEach(n => n['股號'] && stocks.add(String(n['股號'])));
-                return Array.from(stocks);
-            }, [data]);
-
-            const filteredStocks = uniqueStocks.filter(code => {
-                if (!searchTerm) return true;
-                const searchUpper = searchTerm.toUpperCase();
-                const ind = data.industry.find(i => String(i['代號']) === code);
-                const rep = data.reports.find(r => String(r['股號']) === code);
-                const name = ind?.['名稱'] || rep?.['公司'] || '';
-                return code.includes(searchUpper) || name.includes(searchUpper);
-            }).slice(0, 60);
-
-            return (
-                <div className="min-h-screen pb-20 bg-[#0b1120]">
-                    
-                    {/* Top Bar */}
-                    <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#0b1120]/80 border-b border-slate-800 shadow-2xl">
-                        <div className="max-w-7xl mx-auto px-6 py-4">
-                            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                                <div className="flex items-center gap-3 select-none">
-                                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-2 rounded-lg shadow-lg shadow-blue-500/20">
-                                        <Icon name="trendingUp" className="text-white" size={24} />
-                                    </div>
-                                    <div>
-                                        <h1 className="text-2xl font-black text-white tracking-tight">REX ALPHA <span className="text-blue-500">WAR ROOM</span></h1>
-                                        <p className="text-slate-500 text-[10px] font-mono tracking-widest uppercase">Cloud Intelligence V2.0</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-4 w-full md:w-auto">
-                                    <div className="relative w-full md:w-96 group">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <Icon name="search" className="text-slate-500 group-focus-within:text-blue-400 transition-colors" />
-                                        </div>
-                                        <input 
-                                            type="text" 
-                                            placeholder="搜尋代號或名稱 (ex: 2330)" 
-                                            className="block w-full pl-10 pr-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:outline-none transition-all"
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                        />
-                                    </div>
-                                    <button onClick={loadAllData} className="p-2.5 bg-slate-800 hover:bg-blue-600 text-slate-400 hover:text-white rounded-lg transition-all border border-slate-700">
-                                        <Icon name="refresh" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </header>
-
-                    <main className="max-w-7xl mx-auto p-6">
-                        {loading && <div className="text-center py-20 loading-pulse text-blue-400 font-bold">資料庫連線中...</div>}
-                        {error && <div className="bg-red-900/30 p-6 rounded-xl text-center text-red-300 border border-red-500/30">{error}</div>}
-
-                        {!loading && !error && (
-                            <>
-                                {/* 統計列 */}
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                                    {[
-                                        { l: "追蹤總數", v: uniqueStocks.length, c: "border-blue-500" },
-                                        { l: "深度報告", v: data.reports.length, c: "border-emerald-500" },
-                                        { l: "外電消息", v: data.news.length, c: "border-purple-500" },
-                                        { l: "重點關注", v: data.reports.filter(r => r['Rex觀察']).length, c: "border-indigo-500" }
-                                    ].map((stat, i) => (
-                                        <div key={i} className={`glass-panel p-4 rounded-xl border-t-4 ${stat.c}`}>
-                                            <div className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">{stat.l}</div>
-                                            <div className="text-3xl font-black text-white">{stat.v}</div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* 股票列表 - Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {filteredStocks.map(code => {
-                                        const industry = data.industry.find(i => String(i['代號']) === code) || {};
-                                        const latestRep = data.reports.find(r => String(r['股號']) === code);
-                                        const latestNews = data.news.find(n => String(n['股號']) === code);
-                                        const name = industry['名稱'] || latestRep?.['公司'] || latestNews?.['公司'] || '未知';
-
-                                        if (!latestRep && !industry['產業'] && !latestNews) return null;
-
-                                        return (
-                                            <div key={code} 
-                                                 onClick={() => setSelectedStock(code)}
-                                                 className="glass-panel clickable-card rounded-xl p-0 relative overflow-hidden flex flex-col h-full group bg-slate-800/40">
-                                                
-                                                {/* Header */}
-                                                <div className="p-5 pb-3 relative z-10">
-                                                    {/* Flexbox 對齊修正：確保 Code 和 Name 在同一基準線 */}
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <div className="flex flex-col">
-                                                            <div className="flex items-baseline gap-3">
-                                                                <span className="text-2xl font-black text-white tracking-tight font-mono">{code}</span>
-                                                                <span className="text-lg text-slate-300 font-bold truncate max-w-[120px]">{name}</span>
-                                                            </div>
-                                                            <div className="flex gap-2 mt-2">
-                                                                {industry['產業'] && <span className="text-[10px] bg-slate-700/80 px-2 py-0.5 rounded text-slate-300 border border-slate-600">{industry['產業']}</span>}
-                                                            </div>
-                                                        </div>
-                                                        {latestRep && (
-                                                            <div className={`text-xs font-bold px-2 py-1 rounded border ${latestRep['投資評等']?.includes('Buy') ? 'bg-red-900/20 text-red-400 border-red-500/30' : 'bg-yellow-900/20 text-yellow-400 border-yellow-500/30'}`}>
-                                                                {latestRep['投資評等']?.substring(0, 6)}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* Content Body */}
-                                                <div className="px-5 flex-1 space-y-3">
-                                                    {industry['產業地位'] && (
-                                                        <p className="text-slate-400 text-xs line-clamp-2 bg-black/20 p-2 rounded border border-white/5">
-                                                            {industry['產業地位']}
-                                                        </p>
-                                                    )}
-                                                    
-                                                    {latestRep ? (
-                                                        <div className="flex gap-3">
-                                                            <div className="w-1 bg-blue-500 rounded-full shrink-0 h-auto"></div>
-                                                            <p className="text-sm text-slate-300 line-clamp-2 leading-relaxed">{latestRep['精簡重點摘要']}</p>
-                                                        </div>
-                                                    ) : latestNews ? (
-                                                        <div className="flex gap-3">
-                                                            <div className="w-1 bg-purple-500 rounded-full shrink-0 h-auto"></div>
-                                                            <p className="text-sm text-slate-300 line-clamp-2 leading-relaxed">{latestNews['報導重點分類']}</p>
-                                                        </div>
-                                                    ) : null}
-                                                </div>
-
-                                                {/* Footer Action */}
-                                                <div className="mt-4 p-3 bg-slate-900/50 border-t border-slate-700/50 flex justify-between items-center">
-                                                    <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                                                        View Report <Icon name="arrowRight" size={10}/>
-                                                    </span>
-                                                    {latestRep?.['Rex觀察'] && <Icon name="star" size={12} className="text-indigo-400"/>}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </>
-                        )}
-                    </main>
-
-                    {selectedStock && (
-                        <StockDetailView 
-                            stockCode={selectedStock} 
-                            industryData={data.industry} 
-                            reportsData={data.reports} 
-                            newsData={data.news} 
-                            onClose={() => setSelectedStock(null)} 
-                        />
-                    )}
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+                `;
+                container.appendChild(card);
+            });
+        }
     </script>
 </body>
 </html>
