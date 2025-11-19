@@ -9,257 +9,277 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
+    
     <style>
         body { background-color: #f3f4f6; font-family: "Microsoft JhengHei", sans-serif; }
-        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.15); }
+        .sidebar { min-height: 100vh; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: all 0.3s ease; }
         .loading-spinner { border-top-color: #3b82f6; animation: spinner 1s linear infinite; }
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="text-gray-800">
+<body class="flex">
 
-    <nav class="bg-gray-900 text-white sticky top-0 z-50 shadow-xl">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="bg-yellow-500 text-gray-900 p-2 rounded-lg">
-                    <i class="fa-solid fa-chart-pie text-xl"></i>
+    <aside class="sidebar w-64 bg-gray-900 text-white hidden md:block flex-shrink-0">
+        <div class="p-6 text-center border-b border-gray-800">
+            <h1 class="text-2xl font-bold text-yellow-500">Rex大叔</h1>
+            <p class="text-sm text-gray-400 mt-1">168台股投資教室</p>
+        </div>
+        <nav class="mt-6">
+            <a href="#" class="block py-3 px-6 bg-gray-800 border-l-4 border-yellow-500 text-white">
+                <i class="fa-solid fa-chart-line mr-3"></i> 投資報告庫
+            </a>
+            <a href="#" class="block py-3 px-6 text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                <i class="fa-solid fa-newspaper mr-3"></i> 產業新聞
+            </a>
+            <a href="#" class="block py-3 px-6 text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                <i class="fa-solid fa-database mr-3"></i> 個股數據
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <header class="bg-white shadow-sm z-10 p-4 flex justify-between items-center">
+            <button class="md:hidden text-gray-600"><i class="fa-solid fa-bars text-2xl"></i></button>
+            <h2 class="text-xl font-bold text-gray-800">投資報告戰情中心</h2>
+            <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-500">資料來源：Rex大叔資料庫</span>
+                <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold">R</div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-6">
+            
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1 relative">
+                        <i class="fa-solid fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                        <input type="text" id="searchInput" placeholder="搜尋公司、股號、關鍵字..." class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <select id="industryFilter" class="md:w-48 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <option value="">所有產業</option>
+                        </select>
                 </div>
-                <span class="text-xl font-bold tracking-wider">Rex大叔投資教室</span>
             </div>
-            <div class="hidden md:block text-sm text-gray-400">Excel 自動串接修復版 v1.0</div>
-        </div>
-    </nav>
 
-    <div class="container mx-auto px-4 py-8">
-        
-        <div class="bg-white rounded-xl shadow p-6 mb-8 border-l-4 border-yellow-500">
-            <div class="flex flex-col md:flex-row gap-4">
-                <div class="flex-1 relative">
-                    <i class="fa-solid fa-search absolute left-3 top-3.5 text-gray-400"></i>
-                    <input type="text" id="searchInput" placeholder="輸入股號或公司名稱 (例如: 2330, 台積電)..." class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none">
+            <div id="loading" class="flex justify-center items-center py-20">
+                <div class="loading-spinner ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+            </div>
+
+            <div id="reportsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
                 </div>
-                <select id="industryFilter" class="md:w-64 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none bg-white">
-                    <option value="">全市場產業</option>
-                    </select>
-            </div>
         </div>
-
-        <div id="statusMsg" class="text-center py-12">
-            <div class="inline-block loading-spinner rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
-            <p class="text-gray-500 text-lg">正在讀取 Excel 檔案並進行資料修復中...</p>
-        </div>
-
-        <div id="reportList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
-            </div>
-
-    </div>
+    </main>
 
     <script>
-        // 設定您的 Excel 檔名 (需確保上傳到 GitHub 後是這些名字)
-        const FILE_REPORTS = 'reports.xlsx';
-        const FILE_INDUSTRY = 'industry.xlsx';
+        // 設定檔案路徑 (GitHub Raw URL 或 本地檔名)
+        const FILE_REPORTS = 'reports.xlsx';   // 報告主檔
+        const FILE_INDUSTRY = 'industry.xlsx'; // 產業對照檔
 
         let allReports = [];
-        let industryMap = {}; // 用來存放「股號 -> 正確產業」的對照表
+        let industryMap = {}; // 用來修復資料的對照表
 
-        // 網頁載入後執行
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            setupEventListeners();
+        });
+
+        async function loadData() {
             try {
-                // 1. 讀取兩個 Excel 檔案 (ArrayBuffer 格式)
-                const [industryData, reportsData] = await Promise.all([
-                    fetch(FILE_INDUSTRY).then(res => {
-                        if(!res.ok) throw new Error("找不到 industry.xlsx");
-                        return res.arrayBuffer();
-                    }),
-                    fetch(FILE_REPORTS).then(res => {
-                        if(!res.ok) throw new Error("找不到 reports.xlsx");
-                        return res.arrayBuffer();
-                    })
+                // 1. 同時讀取兩個 Excel 檔案
+                // 注意：Excel 讀取需要用 arrayBuffer 格式
+                const [industryRes, reportsRes] = await Promise.all([
+                    fetch(FILE_INDUSTRY).then(res => res.arrayBuffer()),
+                    fetch(FILE_REPORTS).then(res => res.arrayBuffer())
                 ]);
 
                 // 2. 處理 Industry 檔案 (建立對照表)
-                const industryWorkbook = XLSX.read(industryData);
-                const industrySheet = industryWorkbook.Sheets[industryWorkbook.SheetNames[0]];
-                // sheet_to_json 會自動把第一行當作標題 (代號, 名稱, 產業...)
-                const industryJson = XLSX.utils.sheet_to_json(industrySheet);
+                const industryWb = XLSX.read(industryRes);
+                const industryWs = industryWb.Sheets[industryWb.SheetNames[0]];
+                const industryJson = XLSX.utils.sheet_to_json(industryWs);
 
                 industryJson.forEach(row => {
-                    // 確保股號存在且轉為字串比對
+                    // 假設欄位名稱是 '代號', '產業', '細產業'
+                    // 我們用 '代號' (股號) 當作 Key
                     if (row['代號']) {
-                        const stockId = row['代號'].toString().trim();
+                        let stockId = row['代號'].toString().trim();
                         industryMap[stockId] = {
-                            industry: row['產業'] || '未分類',
-                            subIndustry: row['細產業'] || '',
-                            name: row['名稱'] // 順便存正確名稱
+                            industry: row['產業'],
+                            subIndustry: row['細產業']
                         };
                     }
                 });
-                console.log('產業對照表建立完成，共', Object.keys(industryMap).length, '筆');
+                console.log("產業對照表建立完成，共 " + Object.keys(industryMap).length + " 筆");
 
-                // 3. 處理 Reports 檔案 (進行資料修復)
-                const reportsWorkbook = XLSX.read(reportsData);
-                const reportsSheet = reportsWorkbook.Sheets[reportsWorkbook.SheetNames[0]];
-                const reportsJson = XLSX.utils.sheet_to_json(reportsSheet);
+                // 3. 處理 Reports 檔案 (並進行資料修復)
+                const reportsWb = XLSX.read(reportsRes);
+                const reportsWs = reportsWb.Sheets[reportsWb.SheetNames[0]];
+                const reportsJson = XLSX.utils.sheet_to_json(reportsWs);
 
-                // 開始清洗資料
-                allReports = reportsJson.map(report => {
-                    const stockId = report['股號'] ? report['股號'].toString().trim() : '';
-                    
-                    // ★★★ 關鍵修復邏輯 ★★★
-                    let finalIndustry = report['產業']; // 預設用原本的 (即使是錯的)
-                    let finalSubIndustry = '';
-                    let isLinked = false;
+                processReports(reportsJson);
 
-                    // 如果這筆報告的股號，在我們的「對照表」裡找得到
-                    if (stockId && industryMap[stockId]) {
-                        // 就用對照表裡的正確資料覆蓋它！
-                        finalIndustry = industryMap[stockId].industry;
-                        finalSubIndustry = industryMap[stockId].subIndustry;
-                        isLinked = true;
-                    }
-
-                    // 如果原本就是錯的(例如寫成個股名)，且找不到對照，就標記為「待確認」
-                    // 這裡做個簡單判斷：如果產業欄位跟公司名稱一樣，通常就是填錯了
-                    if (!isLinked && report['產業'] === report['公司']) {
-                         finalIndustry = '產業未分類';
-                    }
-
-                    return {
-                        ...report,
-                        '產業': finalIndustry,
-                        '細產業': finalSubIndustry,
-                        '股號': stockId
-                    };
-                });
-
-                // 4. 渲染畫面
-                initFilters();
-                renderData(allReports);
-                
-                // 隱藏讀取中，顯示內容
-                document.getElementById('statusMsg').classList.add('hidden');
-                document.getElementById('reportList').classList.remove('hidden');
-
-            } catch (err) {
-                console.error(err);
-                document.getElementById('statusMsg').innerHTML = `
-                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 inline-block text-left">
-                        <p class="font-bold">讀取失敗</p>
-                        <p>請確認以下幾點：</p>
-                        <ul class="list-disc pl-5 mt-2">
-                            <li>檔案名稱是否為 reports.xlsx 和 industry.xlsx</li>
-                            <li>這兩個檔案是否已上傳到 GitHub 同一目錄</li>
-                            <li>如果在本機測試，需要使用 Live Server (因為瀏覽器安全限制)</li>
-                        </ul>
-                        <p class="mt-2 text-sm text-gray-500">錯誤訊息: ${err.message}</p>
-                    </div>
-                `;
+            } catch (error) {
+                console.error("讀取失敗:", error);
+                document.getElementById('loading').innerHTML = 
+                    `<div class="text-red-500 font-bold">資料載入失敗，請確認 reports.xlsx 和 industry.xlsx 檔案是否存在。</div>`;
             }
-        });
+        }
 
-        // 初始化產業篩選選單
-        function initFilters() {
+        function processReports(data) {
+            // 資料清洗與修復
+            allReports = data.map(report => {
+                let stockId = report['股號'] ? report['股號'].toString().trim() : '';
+                let originalIndustry = report['產業']; // 這裡可能填錯 (例如填成公司名)
+                let correctIndustry = originalIndustry; // 預設先用原本的
+                let subIndustry = '';
+
+                // ★★★ 自動修復邏輯 ★★★
+                // 如果這筆報告有股號，且在對照表裡找得到
+                if (stockId && industryMap[stockId]) {
+                    correctIndustry = industryMap[stockId].industry; // 用正確的產業覆蓋
+                    subIndustry = industryMap[stockId].subIndustry;  // 順便補上細產業
+                } else {
+                    // 如果找不到對照 (例如前五篇沒股號)，且欄位看起來像公司名，就標示未分類
+                    if (report['產業'] === report['公司']) {
+                         correctIndustry = '未分類/待確認';
+                    }
+                }
+
+                return {
+                    ...report,
+                    '產業': correctIndustry, // 這是修復後的正確產業
+                    '細產業': subIndustry,
+                    '股號': stockId
+                };
+            });
+
+            // 初始化畫面
+            initIndustryFilter();
+            renderReports(allReports);
+            
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('reportsContainer').classList.remove('hidden');
+        }
+
+        function initIndustryFilter() {
             const industrySet = new Set();
             allReports.forEach(r => {
-                if (r['產業']) industrySet.add(r['產業']);
+                if(r['產業']) industrySet.add(r['產業']);
             });
             
             const select = document.getElementById('industryFilter');
             Array.from(industrySet).sort().forEach(ind => {
-                const opt = document.createElement('option');
-                opt.value = ind;
-                opt.textContent = ind;
-                select.appendChild(opt);
+                const option = document.createElement('option');
+                option.value = ind;
+                option.textContent = ind;
+                select.appendChild(option);
             });
-
-            // 綁定搜尋事件
-            document.getElementById('searchInput').addEventListener('input', filterData);
-            select.addEventListener('change', filterData);
         }
 
-        // 資料過濾邏輯
-        function filterData() {
-            const keyword = document.getElementById('searchInput').value.toLowerCase();
-            const industry = document.getElementById('industryFilter').value;
-
-            const filtered = allReports.filter(item => {
-                const matchKeyword = (
-                    (item['公司'] && item['公司'].toString().toLowerCase().includes(keyword)) ||
-                    (item['股號'] && item['股號'].toString().includes(keyword)) ||
-                    (item['精簡重點摘要'] && item['精簡重點摘要'].toString().toLowerCase().includes(keyword))
-                );
-                const matchIndustry = industry === '' || item['產業'] === industry;
-                return matchKeyword && matchIndustry;
-            });
-
-            renderData(filtered);
-        }
-
-        // 渲染卡片
-        function renderData(data) {
-            const container = document.getElementById('reportList');
+        function renderReports(reports) {
+            const container = document.getElementById('reportsContainer');
             container.innerHTML = '';
 
-            if (data.length === 0) {
-                container.innerHTML = '<div class="col-span-full text-center text-gray-500">沒有找到符合的資料</div>';
+            if (reports.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10">找不到符合的資料</div>';
                 return;
             }
 
-            data.forEach(item => {
-                // 處理標籤
+            reports.forEach(report => {
+                // 處理星星評等
+                const stars = report['重要性'] || '⭐⭐⭐';
+                
+                // 處理標籤 (Tag)
                 let tagsHtml = '';
-                if (item['標籤']) {
-                    tagsHtml = item['標籤'].toString().split('#')
-                        .filter(t => t.trim())
-                        .map(t => `<span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1 mb-1">#${t.trim()}</span>`)
+                if (report['標籤']) {
+                    tagsHtml = report['標籤'].toString().split('#')
+                        .filter(t => t.trim() !== '')
+                        .map(t => `<span class="inline-block bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded-full mr-1 mb-1">#${t.trim()}</span>`)
                         .join('');
                 }
 
-                // 處理細產業顯示
+                // 處理細產業標籤
                 let subIndHtml = '';
-                if (item['細產業']) {
-                    subIndHtml = `<span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded mb-2">${item['細產業']}</span>`;
+                if (report['細產業']) {
+                    subIndHtml = `<span class="inline-block bg-green-50 text-green-700 text-xs px-2 py-1 rounded border border-green-100 mb-2">${report['細產業']}</span>`;
                 }
 
                 const card = document.createElement('div');
-                card.className = 'bg-white rounded-xl shadow border border-gray-100 p-5 card-hover flex flex-col';
+                card.className = 'bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden card-hover flex flex-col h-full';
+                
                 card.innerHTML = `
-                    <div class="flex justify-between items-start mb-3">
-                        <span class="bg-gray-800 text-white text-xs py-1 px-2 rounded font-bold">${item['產業']}</span>
-                        <span class="text-gray-400 text-xs">${item['報告日期'] || ''}</span>
-                    </div>
-                    
-                    <div class="mb-1">
-                        <h3 class="text-xl font-bold text-gray-800">${item['公司'] || '未知公司'} <span class="text-gray-500 text-sm">(${item['股號'] || 'N/A'})</span></h3>
-                    </div>
-                    
-                    ${subIndHtml}
+                    <div class="p-5 flex-1 flex flex-col">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded">${report['產業'] || '未分類'}</span>
+                            <span class="text-xs text-gray-400">${report['報告日期'] || ''}</span>
+                        </div>
+                        
+                        <div class="flex items-baseline gap-2 mb-1">
+                            <h3 class="text-lg font-bold text-gray-800">${report['公司'] || '未知'} <span class="text-gray-400 text-sm font-normal">(${report['股號'] || 'N/A'})</span></h3>
+                        </div>
 
-                    <div class="flex items-center gap-2 mb-4 text-sm text-gray-600">
-                        <span class="text-yellow-500 font-bold">${item['重要性'] || '⭐⭐⭐'}</span>
-                        <span class="border-l pl-2">${item['券商'] || '綜合'}</span>
-                        ${item['投資評等'] ? `<span class="bg-red-100 text-red-600 px-2 py-0.5 rounded text-xs font-bold">${item['投資評等']}</span>` : ''}
-                    </div>
+                        ${subIndHtml}
 
-                    <div class="mb-4 flex-grow">
-                        <p class="text-gray-600 text-sm line-clamp-3 hover:line-clamp-none transition-all cursor-pointer bg-gray-50 p-3 rounded">
-                            ${item['精簡重點摘要'] || '暫無摘要內容...'}
-                        </p>
-                    </div>
+                        <div class="flex items-center gap-2 mb-3 text-sm">
+                            <span class="text-yellow-500 text-xs">${stars}</span>
+                            <span class="text-gray-500 font-medium border px-2 rounded text-xs">${report['券商'] || '綜合'}</span>
+                            ${report['投資評等'] ? `<span class="text-red-500 font-bold border border-red-100 bg-red-50 px-2 rounded text-xs">${report['投資評等']}</span>` : ''}
+                        </div>
 
-                    <div class="mt-auto pt-3 border-t border-gray-100">
-                        <div class="flex flex-wrap gap-1 mb-3">
+                        <div class="mb-4 flex-grow">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">精簡重點摘要</h4>
+                            <p class="text-gray-600 text-sm leading-relaxed line-clamp-4 hover:line-clamp-none transition-all cursor-pointer bg-gray-50 p-2 rounded">
+                                ${report['精簡重點摘要'] || '暫無摘要'}
+                            </p>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1 mt-auto">
                             ${tagsHtml}
                         </div>
-                        <div class="flex justify-between items-center">
-                            <div class="text-xs text-gray-500">目標價: <span class="font-bold text-gray-900 text-sm">${item['目標價'] || '--'}</span></div>
-                            <button class="text-blue-600 hover:text-blue-800 text-sm font-medium">詳細內容 &rarr;</button>
+                    </div>
+                    <div class="bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-between items-center">
+                        <div class="text-xs text-gray-500">
+                            目標價: <span class="font-bold text-gray-800 text-base">${report['目標價'] || '--'}</span>
                         </div>
+                        <button class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                            查看詳情 <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
                     </div>
                 `;
                 container.appendChild(card);
             });
+        }
+
+        function setupEventListeners() {
+            const searchInput = document.getElementById('searchInput');
+            const industryFilter = document.getElementById('industryFilter');
+
+            function filterData() {
+                const keyword = searchInput.value.toLowerCase();
+                const industry = industryFilter.value;
+
+                const filtered = allReports.filter(report => {
+                    // 確保欄位是字串再進行比對
+                    const company = (report['公司'] || '').toString().toLowerCase();
+                    const stockId = (report['股號'] || '').toString();
+                    const summary = (report['精簡重點摘要'] || '').toString().toLowerCase();
+                    const tags = (report['標籤'] || '').toString().toLowerCase();
+
+                    const matchKeyword = (
+                        company.includes(keyword) ||
+                        stockId.includes(keyword) ||
+                        summary.includes(keyword) ||
+                        tags.includes(keyword)
+                    );
+                    const matchIndustry = industry === '' || report['產業'] === industry;
+                    return matchKeyword && matchIndustry;
+                });
+
+                renderReports(filtered);
+            }
+
+            searchInput.addEventListener('input', filterData);
+            industryFilter.addEventListener('change', filterData);
         }
     </script>
 </body>
