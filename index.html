@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Rex 投資決策 (完美排版版)</title>
+<title>Rex 投資決策 (策略優化版)</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
     :root {
@@ -75,7 +75,7 @@
         background: #fff; border-radius: var(--radius); padding: 16px;
         box-shadow: var(--shadow); position: relative;
         display: flex; flex-direction: column;
-        min-height: 180px; 
+        min-height: 200px; /* 稍微加高以容納策略內容 */
         border: 1px solid rgba(0,0,0,0.03);
     }
     
@@ -89,12 +89,15 @@
     }
     .btn-fav.active { color: #ef4444; }
 
-    /* Row 1: 股票名稱 + 產業 (同一排) */
+    /* Row 1: 股票名稱 + 市場/產業 (同一排) */
     .c-row-title {
-        display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; padding-right: 24px;
+        display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; padding-right: 24px;
+        flex-wrap: wrap;
     }
     .c-name { font-size: 20px; font-weight: 900; color: #111827; white-space: nowrap; }
-    .c-ind { font-size: 13px; color: #64748b; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .c-market-ind { 
+        font-size: 13px; color: #64748b; font-weight: 500; 
+    }
 
     /* Row 2: 代號 + 產業地位 (代號右邊，可兩列) */
     .c-row-info {
@@ -106,15 +109,17 @@
     }
     .c-pos {
         font-size: 13px; line-height: 1.4; color: #b45309; font-weight: 600;
-        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-        background: rgba(255, 251, 235, 0.5); border-radius: 4px; /* 輕微底色突顯 */
+        display: -webkit-box; -webkit-line-clamp: 2; /* 限制兩行 */
+        -webkit-box-orient: vertical; overflow: hidden;
+        /* 不用背景色，純文字呈現，更乾淨 */
     }
 
-    /* Body: 摘要 */
+    /* Body: 策略方向 (前三點) */
     .c-body { 
         font-size: 15px; color: #334155; line-height: 1.6;
         overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
         flex-grow: 1;
+        white-space: pre-line; /* 保留換行 */
     }
     
     /* Foot: 評等與目標價 */
@@ -177,7 +182,7 @@
         </div>
         <div class="nav-scroll">
             <div class="nav-pill active" onclick="app.filter('all', this)">全部</div>
-            <div class="nav-pill" onclick="app.filter('high', this)">🔥 重點報告</div>
+            <div class="nav-pill highlight" onclick="app.filter('high', this)">🔥 重點報告</div>
             <div class="nav-pill" onclick="app.filter('ai', this)">🤖 AI</div>
             <div class="nav-pill" onclick="app.filter('semi', this)">🏭 半導體</div>
         </div>
@@ -236,20 +241,19 @@
 let DB_REPORTS = [];
 let DB_NEWS = [];
 let DB_IND = [];
-// 讀取 LocalStorage 自選清單
-let FAVORITES = JSON.parse(localStorage.getItem('rex_fav_ids_v4')) || [];
+let FAVORITES = JSON.parse(localStorage.getItem('rex_fav_ids_v5')) || [];
 
 // 內建測試資料
 const TEST_REPORTS = [
     {
         id: "R01", company: "華碩", code: "2357", date: "2025/11/19", broker: "元大投顧", 
-        rating: "買進", target: "700", imp: "高", summary: "伺服器營收佔比明年挑戰 20%，GB200 出貨順暢。",
-        full: { fin: "營收創新高。", rex: "低估值 AI 股，建議買進。", ops:"AI PC 佔比提升。" }
+        rating: "買進", target: "700", imp: "高", summary: "伺服器營收佔比明年挑戰 20%。",
+        full: { strat: "1. 伺服器：預計 2025 年倍增。\n2. PC：AI PC 市占率 25%。\n3. 手機：穩定獲利。", fin: "營收創新高。", rex: "低估值 AI 股。" }
     },
     {
         id: "R02", company: "致茂", code: "2360", date: "2025/11/18", broker: "摩根士丹利", 
         rating: "中立", target: "520", imp: "中", summary: "等待 CoWoS 擴產效應。",
-        full: { fin: "營收持平。", rex: "股價已反映利多。" }
+        full: { strat: "1. 半導體測試需求增。\n2. 矽光子市場開拓。\n3. 電動車動能放緩。", fin: "營收持平。", rex: "股價已反映利多。" }
     }
 ];
 const TEST_IND = [
@@ -305,7 +309,7 @@ const app = {
         DB_IND = data.map(r => ({ n: r['名稱'], c: r['代號'], m: r['市場'], i: r['產業'], p: r['產業地位'] }));
     },
 
-    // --- 1. 卡片渲染 (新版面) ---
+    // --- 1. 卡片渲染 (新排版) ---
     renderFeed: function(data, containerId = 'feed-container') {
         const el = document.getElementById(containerId);
         if(!data || data.length === 0) {
@@ -321,8 +325,16 @@ const app = {
             const isBuy = d.rating && (d.rating.includes('買') || d.rating.includes('優'));
             // 整合產業資訊
             const ind = DB_IND.find(i => i.c == d.code) || {};
-            const indText = ind.i ? `${ind.m||''} ${ind.i}` : ''; // 上市 半導體
+            const marketInd = ind.i ? `${ind.m||''} ${ind.i}` : ''; // 上市 電腦週邊
             
+            // 提取策略方向前三點 (如果沒有策略，則用摘要)
+            let stratText = d.full.strat || d.summary;
+            if (stratText) {
+                // 簡單處理：取前三行，或前100字
+                const lines = stratText.split(/[\n\r]+/);
+                if(lines.length > 3) stratText = lines.slice(0,3).join('\n') + '...';
+            }
+
             return `
             <div class="card ${isBuy ? 'is-buy' : ''}" onclick="app.goDetail('${d.id}')">
                 <div class="btn-fav ${isFav?'active':''}" onclick="event.stopPropagation(); app.toggleFav('${d.id}', this)">
@@ -331,7 +343,7 @@ const app = {
                 
                 <div class="c-row-title">
                     <div class="c-name">${d.company}</div>
-                    <div class="c-ind">${indText}</div>
+                    <div class="c-market-ind">${marketInd}</div>
                 </div>
                 
                 <div class="c-row-info">
@@ -339,7 +351,7 @@ const app = {
                     ${ind.p ? `<div class="c-pos">🏆 ${ind.p}</div>` : ''}
                 </div>
                 
-                <div class="c-body">${d.summary}</div>
+                <div class="c-body">${stratText}</div>
                 
                 <div class="c-foot">
                     <span class="${isBuy?'val-red':''}">${d.rating}</span>
@@ -358,7 +370,7 @@ const app = {
             FAVORITES.push(id);
             btn.innerText = '♥'; btn.classList.add('active');
         }
-        localStorage.setItem('rex_fav_ids_v4', JSON.stringify(FAVORITES));
+        localStorage.setItem('rex_fav_ids_v5', JSON.stringify(FAVORITES));
         
         // 如果在自選頁，立即刷新
         if(document.getElementById('favView').style.display === 'block') {
@@ -402,7 +414,7 @@ const app = {
     // 4. 外電與產業
     renderNews: function(data) { /* 略，維持原樣 */ },
     searchNews: function(v) {
-        const res = DB_NEWS.filter(n => (n.co+n.content).includes(v));
+        const res = DB_NEWS.filter(n => (n.co+n.code+n.content).includes(v));
         const el = document.getElementById('news-container');
         el.innerHTML = res.map(n => `
             <div class="news-card">
@@ -443,6 +455,7 @@ const app = {
         let res = DB_REPORTS;
         if(type==='high') res = res.filter(d=>d.imp==='高');
         if(type==='ai') res = res.filter(d=>(d.tags+d.summary).includes('AI'));
+        if(type==='semi') res = res.filter(d=>(d.tags+d.summary).includes('半導體'));
         this.renderFeed(res);
     }
 };
