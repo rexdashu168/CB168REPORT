@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>檔案導覽頁面</title>
+    <title>CB168 報表導覽</title>
     <style>
-        /* 簡單的 CSS 樣式，讓頁面看起來整潔 */
+        /* 頁面樣式設定 */
         body {
-            font-family: "Microsoft JhengHei", Arial, sans-serif;
-            background-color: #f4f4f9;
+            font-family: "Microsoft JhengHei", "PingFang TC", Arial, sans-serif;
+            background-color: #f0f2f5;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -18,51 +18,64 @@
         .container {
             background-color: white;
             padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             text-align: center;
-            width: 300px;
+            width: 80%;
+            max-width: 400px;
         }
         h1 {
-            color: #333;
+            color: #2c3e50;
             margin-bottom: 30px;
             font-size: 24px;
         }
+        /* 按鈕樣式 */
         .link-btn {
             display: block;
             width: 100%;
-            padding: 15px 0;
-            margin-bottom: 15px;
-            background-color: #007bff;
+            padding: 18px 0;
+            margin-bottom: 20px;
+            background-color: #007bff; /* 藍色按鈕 */
             color: white;
             text-decoration: none;
-            border-radius: 6px;
-            transition: background-color 0.3s;
+            border-radius: 8px;
+            font-size: 18px;
             font-weight: bold;
-            box-sizing: border-box; /* 確保 padding 不會撐大寬度 */
+            transition: background-color 0.2s;
+            box-sizing: border-box;
         }
         .link-btn:hover {
-            background-color: #0056b3;
+            background-color: #0056b3; /* 滑鼠移過去變深藍色 */
         }
-        .note {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #888;
-        }
+        /* 為不同的檔案給一點顏色區分 */
+        .btn-industry { background-color: #28a745; } /* 綠色 */
+        .btn-industry:hover { background-color: #218838; }
+        
+        .btn-news { background-color: #17a2b8; } /* 青色 */
+        .btn-news:hover { background-color: #138496; }
+        
+        .btn-reports { background-color: #ffc107; color: #333; } /* 黃色 */
+        .btn-reports:hover { background-color: #e0a800; }
+
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>請選擇檔案</h1>
+        <h1>CB168 檔案選單</h1>
 
-        <a href="file1.html" class="link-btn" target="_blank">開啟檔案一</a>
+        <a href="industry.xlsx" class="link-btn btn-industry">
+            開啟 Industry (產業資料)
+        </a>
 
-        <a href="file2.html" class="link-btn" target="_blank">開啟檔案二</a>
+        <a href="news.xlsx" class="link-btn btn-news">
+            開啟 News (新聞資料)
+        </a>
 
-        <a href="file3.html" class="link-btn" target="_blank">開啟檔案三</a>
+        <a href="reports.xlsx" class="link-btn btn-reports">
+            開啟 Reports (報告資料)
+        </a>
 
-        <p class="note">備註：請確保這些檔案與此網頁位於同一資料夾內。</p>
     </div>
 
 </body>
