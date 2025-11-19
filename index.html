@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rex 投資決策流 (Card Flow)</title>
+<title>Rex 投資決策流 (Excel Edition)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
     :root {
         --bg-body: #f2f4f7;       /* 極淺灰背景 */
@@ -26,6 +27,19 @@
         -webkit-tap-highlight-color: transparent;
     }
 
+    /* === Loading 遮罩 === */
+    #loading-screen {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: #fff; z-index: 9999; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; transition: opacity 0.5s;
+    }
+    .spinner {
+        width: 40px; height: 40px; border: 4px solid #f3f3f3;
+        border-top: 4px solid var(--primary); border-radius: 50%;
+        animation: spin 1s linear infinite; margin-bottom: 16px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
     /* === Header === */
     .header {
         background: #fff;
@@ -33,7 +47,6 @@
         position: sticky;
         top: 0;
         z-index: 50;
-        /* 為了配合下方的橫條，這裡不做 shadow，shadow 給橫條 */
     }
     .header-top {
         display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
@@ -114,7 +127,6 @@
     }
     .badge-buy { background: #fee2e2; color: #ef4444; }
     .badge-hold { background: #ffedd5; color: #c2410c; }
-    .badge-news { background: #f3f4f6; color: #4b5563; }
 
     .bc-summary {
         font-size: 13px; color: #4b5563; line-height: 1.6;
@@ -132,7 +144,7 @@
     .bc-price { font-weight: 700; color: #111827; font-size: 12px; }
 
     /* === 詳情頁 (Chat UI) === */
-    .view { display: none; animation: slideUp 0.3s ease; }
+    .view { display: none; animation: slideUp 0.3s ease; padding-bottom: 40px; }
     .view.active { display: block; }
     @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
@@ -143,14 +155,14 @@
     }
     @keyframes popIn { to { opacity: 1; } }
     
-    .sec-title { font-size: 12px; font-weight: 700; color: #9ca3af; margin-bottom: 8px; text-transform: uppercase; }
+    .sec-title { font-size: 12px; font-weight: 700; color: #9ca3af; margin-bottom: 8px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
     .txt-content { font-size: 15px; color: #374151; line-height: 1.7; white-space: pre-line; }
 
     /* === 列表式視圖 (外電/產業) === */
     .list-view-container { padding: 20px; }
     .list-card {
         background: white; padding: 16px; border-radius: 16px; margin-bottom: 12px;
-        box-shadow: var(--shadow-sm); border-left: 4px solid #e5e7eb;
+        box-shadow: var(--shadow-md); border-left: 4px solid #e5e7eb;
     }
 
     /* 返回按鈕 */
@@ -160,57 +172,46 @@
         border-radius: 50%; display: flex; align-items: center; justify-content: center;
         font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer;
     }
-
-    /* 底部裝飾 */
-    .bottom-spacer { height: 40px; text-align: center; color: #d1d5db; font-size: 12px; padding-top: 20px; }
-
 </style>
 </head>
 <body>
+
+<div id="loading-screen">
+    <div class="spinner"></div>
+    <div id="loading-text">正在讀取 Excel 資料庫...</div>
+    <div style="font-size:12px; color:#999; margin-top:10px;">請確認 .xlsx 檔案已上傳</div>
+</div>
 
 <div id="homeView" class="view active">
     <div class="header">
         <div class="header-top">
             <div class="app-title">Rex 投資決策流</div>
-            <div class="btn-search" onclick="alert('搜尋功能')">🔍</div>
+            <div class="btn-search" onclick="alert('搜尋功能開發中')">🔍</div>
         </div>
     </div>
 
     <div class="top-scroll-container">
-        <div class="nav-pill active" onclick="app.filter('all', this)">
-            <span>♾️</span> 全部
-        </div>
-        <div class="nav-pill highlight" onclick="app.filter('high', this)">
-            <span>🔥</span> 重點報告
-        </div>
-        <div class="nav-pill" onclick="app.switchView('newsView')">
-            <span>⚡</span> 外電快訊
-        </div>
-        <div class="nav-pill" onclick="app.switchView('industryView')">
-            <span>🏭</span> 產業百科
-        </div>
-        <div class="nav-pill" onclick="app.filter('ai', this)">
-            <span>🤖</span> AI 供應鏈
-        </div>
+        <div class="nav-pill active" onclick="app.filter('all', this)"><span>♾️</span> 全部</div>
+        <div class="nav-pill highlight" onclick="app.filter('high', this)"><span>🔥</span> 重點報告</div>
+        <div class="nav-pill" onclick="app.switchView('newsView')"><span>⚡</span> 外電快訊</div>
+        <div class="nav-pill" onclick="app.switchView('industryView')"><span>🏭</span> 產業百科</div>
+        <div class="nav-pill" onclick="app.filter('ai', this)"><span>🤖</span> AI 供應鏈</div>
     </div>
 
-    <div class="content-grid" id="feed-container">
-        </div>
-    
-    <div class="bottom-spacer">End of Feed</div>
+    <div class="content-grid" id="feed-container"></div>
+    <div style="text-align:center; color:#d1d5db; font-size:12px; padding:20px;">資料來源：GitHub Excel</div>
 </div>
 
 <div id="detailView" class="view">
-    <div style="padding:20px 20px 0;">
+    <div style="padding:20px 20px 0; background:#f2f4f7; position:sticky; top:0; z-index:10;">
         <h2 style="margin:0;">深度解析</h2>
-        <p style="color:#6b7280; font-size:13px; margin:4px 0 20px;">完整 19 欄位資料</p>
     </div>
     <div class="chat-container" id="chat-content"></div>
     <div class="btn-back-float" onclick="app.back()">↩</div>
 </div>
 
 <div id="newsView" class="view">
-    <div style="padding:20px; background:white; position:sticky; top:0; z-index:10;">
+    <div style="padding:20px; background:#f2f4f7; position:sticky; top:0; z-index:10;">
         <h2 style="margin:0; color:#d97706;">外電情報</h2>
     </div>
     <div class="list-view-container" id="news-list"></div>
@@ -218,104 +219,127 @@
 </div>
 
 <div id="industryView" class="view">
-    <div style="padding:20px; background:white; position:sticky; top:0; z-index:10;">
+    <div style="padding:20px; background:#f2f4f7; position:sticky; top:0; z-index:10;">
         <h2 style="margin:0; color:#059669;">產業百科</h2>
-        <input type="text" placeholder="輸入代號搜尋..." onkeyup="app.searchInd(this.value)" 
-               style="width:100%; padding:12px; margin-top:10px; background:#f3f4f6; border:none; border-radius:12px; outline:none;">
+        <input type="text" placeholder="輸入代號或名稱搜尋..." onkeyup="app.searchInd(this.value)" 
+               style="width:100%; padding:12px; margin-top:10px; border:none; border-radius:12px; outline:none; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
     </div>
     <div class="list-view-container" id="ind-list"></div>
     <div class="btn-back-float" onclick="app.back()">↩</div>
 </div>
 
 <script>
-// === 資料庫 (完整保留) ===
+// 全局變數
+let DB_REPORTS = [];
+let DB_NEWS = [];
+let DB_IND = [];
 
-// 1. 研報 (19欄位)
-const DB_REPORTS = [
-    {
-        id: "R01", company: "華碩", code: "2357", date: "11/19", broker: "元大", rating: "買進", target: "700", imp: "高",
-        summary: "伺服器營收佔比明年挑戰 20%，GB200 出貨順暢。",
-        tags: ["AI", "PC"],
-        full: {
-            analyst: "魏建發", type: "Call Memo", ind: "PC/伺服器",
-            fin: "3Q25 營收 1,899億 (QoQ+9%)，EPS 14.2元。",
-            ops: "1. 伺服器：預計 2025 年倍增。\n2. PC：AI PC 市占率 25%。",
-            strat: "全力轉型 AI 伺服器解決方案。",
-            qa: "Q: GB200 出貨？ A: 12月小量。",
-            rex: "華碩是這波 AI 伺服器被低估的標的，起步晚但追趕快。",
-            follow: "1月 CES 展新品。"
-        }
-    },
-    {
-        id: "R02", company: "致茂", code: "2360", date: "11/19", broker: "大摩", rating: "優於大盤", target: "520", imp: "中",
-        summary: "SLT 測試設備需求強勁，訂單能見度達 2026。",
-        tags: ["CoWoS"],
-        full: {
-            analyst: "Sharon", type: "個股", ind: "儀器",
-            fin: "預估 Q4 營收季增 15%。",
-            ops: "AI 晶片功耗提升拉長測試時間。",
-            strat: "深耕半導體 Final Test。",
-            qa: "Q: CoWoS 擴產？ A: 正向。",
-            rex: "設備股王，拉回找買點。",
-            follow: "CoWoS 擴產進度。"
-        }
-    },
-    {
-        id: "R03", company: "台積電", code: "2330", date: "11/18", broker: "高盛", rating: "買進", target: "1380", imp: "高",
-        summary: "3奈米產能滿載，定價能力強勁。",
-        tags: ["半導體"],
-        full: {
-            analyst: "Bill", type: "個股", ind: "半導體",
-            fin: "預估 2025 營收成長 25%。",
-            ops: "美國廠良率追平台灣。",
-            strat: "維持技術領先。",
-            qa: "Q: 反壟斷？ A: 影響有限。",
-            rex: "長線保護短線，基本面無虞。",
-            follow: "亞利桑那廠量產。"
-        }
-    },
-    {
-        id: "R04", company: "緯穎", code: "6669", date: "11/18", broker: "野村", rating: "中立", target: "1800", imp: "中",
-        summary: "短期專案轉換期，營收動能稍緩。",
-        tags: ["AI"],
-        full: {
-            analyst: "Donnie", type: "個股", ind: "伺服器",
-            fin: "毛利率持平。",
-            ops: "等待 ASIC 新專案。",
-            strat: "分散客戶風險。",
-            qa: "Q: Meta 展望？ A: 正向。",
-            rex: "評價合理，等待催化劑。",
-            follow: "新晶片推出時程。"
-        }
-    }
-];
-
-// 2. 外電 (10欄位)
-const DB_NEWS = [
-    { src:"Bloomberg", date:"11/19", co:"台積電", code:"2330", imp:"高", title:"亞利桑那廠良率超車", content:"彭博社報導，台積電美國廠良率已超越台灣廠區。" },
-    { src:"Morgan Stanley", date:"11/19", co:"聯發科", code:"2454", imp:"中", title:"天璣9400 熱銷", content:"受惠 Vivo/Oppo 新機，中國市佔提升。" }
-];
-
-// 3. 產業 (6欄位)
-const DB_IND = [
-    { c:"2330", n:"台積電", i:"半導體", pos:"全球晶圓代工龍頭 (市占>60%)" },
-    { c:"2357", n:"華碩", i:"電腦", pos:"主機板第一大" }
-];
-
-// === 邏輯 ===
 const app = {
     history: ['homeView'],
 
-    init: function() {
-        this.renderFeed(DB_REPORTS);
-        this.renderNews();
-        this.searchInd('');
+    // 初始化：讀取 Excel
+    init: async function() {
+        try {
+            await Promise.all([
+                this.loadXLSX('reports.xlsx', 'report'),
+                this.loadXLSX('news.xlsx', 'news'),
+                this.loadXLSX('industry.xlsx', 'ind')
+            ]);
+            
+            // 完成
+            document.getElementById('loading-screen').style.opacity = 0;
+            setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
+            
+            this.renderFeed(DB_REPORTS);
+            this.renderNews();
+            this.searchInd(''); 
+            
+        } catch (error) {
+            console.error(error);
+            document.getElementById('loading-text').innerHTML = "讀取失敗<br><small>請檢查是否已上傳 reports.xlsx, news.xlsx, industry.xlsx</small>";
+        }
     },
 
-    // 渲染首頁大框框 (瀑布流卡片)
+    // 使用 SheetJS 讀取 Excel
+    loadXLSX: async function(url, type) {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`無法讀取 ${url}`);
+        const arrayBuffer = await response.arrayBuffer();
+        
+        // 解析 Workbook
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName]);
+
+        // 分配資料
+        if (type === 'report') this.processReports(jsonData);
+        if (type === 'news') this.processNews(jsonData);
+        if (type === 'ind') this.processInd(jsonData);
+    },
+
+    // 處理研報資料 (19 欄位 Mapping)
+    processReports: function(data) {
+        DB_REPORTS = data.map((row, i) => ({
+            id: row['編號'] || `R${i}`,
+            company: row['公司'],
+            code: row['股號'],
+            date: row['報告日期'],
+            broker: row['券商'],
+            rating: row['投資評等'],
+            target: row['目標價'],
+            imp: row['重要性'],
+            summary: row['精簡重點摘要'],
+            tags: row['標籤'] || "",
+            full: {
+                analyst: row['分析師'],
+                type: row['報告類型'],
+                ind: row['產業'],
+                fin: row['關鍵財務數據'],
+                ops: row['營運重點'],
+                strat: row['策略方向'],
+                qa: row['重要QA摘要'],
+                rex: row['Rex觀察'],
+                follow: row['後續追蹤']
+            }
+        }));
+    },
+
+    // 處理外電資料 (10 欄位 Mapping)
+    processNews: function(data) {
+        DB_NEWS = data.map((row, i) => ({
+            id: row['編號'] || `N${i}`,
+            src: row['券商來源'],
+            date: row['日期'],
+            co: row['公司'],
+            code: row['股號'],
+            imp: row['重要性'],
+            title: row['報導重點分類'], 
+            content: row['完整報導內容'],
+            cat: row['資料類型'],
+            tags: row['標籤']
+        }));
+    },
+
+    // 處理產業資料 (6 欄位 Mapping)
+    processInd: function(data) {
+        DB_IND = data.map(row => ({
+            c: row['代號'],
+            n: row['名稱'],
+            m: row['市場'],
+            i: row['產業'],
+            s: row['細產業'],
+            pos: row['產業地位']
+        }));
+    },
+
+    // --- 渲染邏輯 ---
+
+    // 首頁：兩欄卡片流
     renderFeed: function(data) {
         const el = document.getElementById('feed-container');
-        el.innerHTML = data.map((d, i) => `
+        if(!data || data.length === 0) { el.innerHTML = '<div style="grid-column:span 2; text-align:center;">暫無資料</div>'; return; }
+        
+        el.innerHTML = data.map(d => `
             <div class="big-card" onclick="app.showDetail('${d.id}')">
                 <div>
                     <div class="bc-head">
@@ -323,15 +347,15 @@ const app = {
                             <div class="bc-comp">${d.company}</div>
                             <span class="bc-code">${d.code}</span>
                         </div>
-                        <span class="bc-badge ${d.rating==='買進'?'badge-buy':'badge-hold'}">${d.rating}</span>
+                        <span class="bc-badge ${d.rating && d.rating.includes('買')?'badge-buy':'badge-hold'}">${d.rating || '-'}</span>
                     </div>
                     <div class="bc-summary">${d.summary}</div>
                 </div>
                 <div class="bc-foot">
-                    <span>${d.broker} · ${d.date}</span>
+                    <span>${d.broker}</span>
                     <span class="bc-price">TP: ${d.target}</span>
                 </div>
-                ${d.imp==='高' ? '<div style="position:absolute; top:0; right:0; width:8px; height:8px; background:#ef4444; border-radius:50%; margin:8px;"></div>' : ''}
+                ${d.imp==='高' ? '<div style="position:absolute; top:0; right:0; width:8px; height:8px; background:#ef4444; border-radius:50%; margin:10px;"></div>' : ''}
             </div>
         `).join('');
     },
@@ -342,16 +366,16 @@ const app = {
             document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
         }
-        
         let res = DB_REPORTS;
         if(type === 'high') res = DB_REPORTS.filter(d => d.imp === '高');
-        if(type === 'ai') res = DB_REPORTS.filter(d => d.tags.includes('AI'));
+        if(type === 'ai') res = DB_REPORTS.filter(d => (d.tags+d.summary).toLowerCase().includes('ai'));
         this.renderFeed(res);
     },
 
-    // 詳情 Chat UI
+    // 詳情頁 Chat UI
     showDetail: function(id) {
         const d = DB_REPORTS.find(x => x.id === id);
+        if(!d) return;
         const c = document.getElementById('chat-content');
         c.innerHTML = '';
         
@@ -363,10 +387,11 @@ const app = {
             { h: `🎯 策略方向`, t: d.full.strat },
             { h: `❓ QA 摘要`, t: d.full.qa },
             { h: `👑 Rex 觀察`, t: d.full.rex, style: "background:#fffbeb; border:1px solid #fcd34d; color:#92400e;" },
-            { h: `📅 後續追蹤`, t: d.full.follow }
+            { h: `📅 後續追蹤`, t: d.full.follow + `\n\n🏷️ ${d.tags}` }
         ];
 
         blocks.forEach((b, i) => {
+            if(!b.t) return;
             setTimeout(() => {
                 c.insertAdjacentHTML('beforeend', `
                     <div class="bubble" style="${b.style||''}">
@@ -381,27 +406,39 @@ const app = {
         this.switchView('detailView');
     },
 
-    // 產業與外電
+    // 渲染外電
     renderNews: function() {
-        document.getElementById('news-list').innerHTML = DB_NEWS.map(n => `
+        const el = document.getElementById('news-list');
+        el.innerHTML = DB_NEWS.map(n => `
             <div class="list-card" style="border-color:#f59e0b">
                 <div style="font-weight:bold; color:#d97706; font-size:12px; margin-bottom:4px;">${n.src} · ${n.date}</div>
                 <div style="font-weight:bold; font-size:16px;">${n.co} ${n.code}</div>
                 <div style="margin:8px 0; font-size:14px;">${n.content}</div>
-                <div style="font-size:12px; color:#9ca3af;">${n.imp}重要 · ${n.title}</div>
+                <div style="font-size:12px; color:#9ca3af;">
+                    <span style="background:#fee2e2; color:#ef4444; padding:2px 6px; border-radius:4px;">${n.imp}重要</span> 
+                    ${n.title}
+                </div>
             </div>
         `).join('');
     },
 
+    // 搜尋產業
     searchInd: function(v) {
         const el = document.getElementById('ind-list');
-        if(!v) { el.innerHTML=''; return; }
-        const res = DB_IND.filter(d => (d.c+d.n).includes(v));
+        if(!v && v!=='') { el.innerHTML=''; return; }
+        // 預設顯示前 20 筆，避免卡頓
+        const res = v===''? DB_IND.slice(0,20) : DB_IND.filter(d => (d.c+d.n).includes(v));
+        
+        if(res.length === 0) { el.innerHTML = '<div style="text-align:center; color:#999">查無資料</div>'; return; }
+
         el.innerHTML = res.map(d => `
             <div class="list-card" style="border-color:#10b981">
-                <div style="font-weight:bold; font-size:18px; color:#064e3b;">${d.n} ${d.c}</div>
-                <div style="font-size:13px; color:#6b7280; margin:4px 0;">${d.i}</div>
-                <div style="background:#ecfdf5; padding:8px; border-radius:8px; color:#047857; font-size:14px;">🏆 ${d.pos}</div>
+                <div style="display:flex; justify-content:space-between;">
+                    <div style="font-weight:bold; font-size:18px; color:#064e3b;">${d.n} ${d.c}</div>
+                    <span style="font-size:12px; background:#e5e7eb; padding:2px 6px; border-radius:4px; height:fit-content">${d.m}</span>
+                </div>
+                <div style="font-size:13px; color:#6b7280; margin:4px 0;">${d.i} > ${d.s}</div>
+                <div style="background:#ecfdf5; padding:8px; border-radius:8px; color:#047857; font-size:14px; margin-top:8px;">🏆 ${d.pos}</div>
             </div>
         `).join('');
     },
@@ -419,6 +456,7 @@ const app = {
     }
 };
 
+// 啟動 App
 app.init();
 </script>
 </body>
