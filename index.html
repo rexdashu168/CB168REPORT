@@ -3,80 +3,395 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CB168 報表導覽</title>
+    <title>Rex大叔投資研究智庫</title>
     <style>
-        /* 頁面樣式設定 */
-        body {
-            font-family: "Microsoft JhengHei", "PingFang TC", Arial, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+        /* --- 基礎設定 --- */
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg: #f3f4f6;
+            --text-main: #1f2937;
+            --text-sub: #6b7280;
         }
-        .container {
-            background-color: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 80%;
-            max-width: 400px;
-        }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 30px;
-            font-size: 24px;
-        }
-        /* 按鈕樣式 */
-        .link-btn {
-            display: block;
-            width: 100%;
-            padding: 18px 0;
-            margin-bottom: 20px;
-            background-color: #007bff; /* 藍色按鈕 */
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
-            transition: background-color 0.2s;
-            box-sizing: border-box;
-        }
-        .link-btn:hover {
-            background-color: #0056b3; /* 滑鼠移過去變深藍色 */
-        }
-        /* 為不同的檔案給一點顏色區分 */
-        .btn-industry { background-color: #28a745; } /* 綠色 */
-        .btn-industry:hover { background-color: #218838; }
-        
-        .btn-news { background-color: #17a2b8; } /* 青色 */
-        .btn-news:hover { background-color: #138496; }
-        
-        .btn-reports { background-color: #ffc107; color: #333; } /* 黃色 */
-        .btn-reports:hover { background-color: #e0a800; }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", "PingFang TC", sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 60px;
+        }
+
+        /* --- 頂部 Header --- */
+        .header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
+        }
+        
+        .header h1 { font-size: 28px; margin-bottom: 8px; letter-spacing: 1px; }
+        .header p { font-size: 15px; opacity: 0.9; font-weight: 300; }
+
+        /* --- 容器與搜尋框 --- */
+        .container {
+            max-width: 1200px;
+            margin: -30px auto 0; /* 讓搜尋框往上浮動 */
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .search-box { margin-bottom: 30px; }
+        
+        .search-input {
+            width: 100%;
+            padding: 18px 25px;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            background: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15);
+            transform: translateY(-2px);
+        }
+
+        /* --- 卡片列表區 (Grid 排版) --- */
+        .list-view {
+            display: grid;
+            grid-template-columns: 1fr; /* 手機預設單欄 */
+            gap: 20px;
+        }
+
+        /* 平板與電腦版：自動變成多欄位 */
+        @media (min-width: 768px) {
+            .list-view { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (min-width: 1024px) {
+            .list-view { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        /* --- 報告卡片設計 --- */
+        .report-card {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .report-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+            border-color: var(--primary);
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .company-info h3 { font-size: 20px; color: #111827; }
+        .company-code { font-size: 14px; color: #9ca3af; margin-left: 5px; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
+        
+        .report-date { font-size: 13px; color: #9ca3af; }
+
+        .analyst-info { font-size: 14px; color: #6b7280; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;}
+        .analyst-info::before { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--primary); border-radius: 50%; }
+
+        .summary {
+            font-size: 15px;
+            color: #374151;
+            margin-bottom: 20px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3; /* 超過三行省略 */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.5;
+        }
+
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+        
+        .tag {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+        
+        .tag.high { background: #fee2e2; color: #ef4444; font-weight: bold; }
+        .tag.cat { background: #e0e7ff; color: var(--primary); }
+
+        /* --- 詳細頁面 (Detail View) --- */
+        .detail-view {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            animation: fadeIn 0.3s ease;
+        }
+        .detail-view.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            background: white;
+            color: var(--text-main);
+            border: 1px solid #e5e7eb;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 30px;
+            transition: all 0.2s;
+        }
+        .back-btn:hover { background: #f9fafb; border-color: #d1d5db; }
+
+        .detail-header { border-bottom: 2px solid #f3f4f6; padding-bottom: 20px; margin-bottom: 30px; }
+        .detail-title { font-size: 32px; color: #111827; margin-bottom: 10px; }
+        
+        .detail-section { margin-bottom: 35px; }
+        .detail-section h3 { 
+            font-size: 18px; color: var(--primary); margin-bottom: 15px; 
+            display: flex; align-items: center;
+        }
+        .detail-section h3::before { content: ''; width: 4px; height: 18px; background: var(--primary); margin-right: 10px; border-radius: 2px; }
+        
+        .detail-content { 
+            white-space: pre-line; 
+            color: #374151; 
+            font-size: 16px; 
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        /* 找不到資料 */
+        .no-result {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px;
+            color: #9ca3af;
+            display: none;
+        }
     </style>
 </head>
 <body>
-
+    <div class="header">
+        <h1>Rex大叔投資研究智庫</h1>
+        <p>整合40篇最新研究報告 · 深度產業分析系統</p>
+    </div>
+    
     <div class="container">
-        <h1>CB168 檔案選單</h1>
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" 
+                   placeholder="🔍 搜尋公司名稱、代號 (如: 2330) 或關鍵字..." 
+                   onkeyup="searchReports()">
+        </div>
+        
+        <div id="listView" class="list-view">
+            </div>
+        
+        <div id="noResult" class="no-result">
+            <p>沒有找到相關報告，請嘗試其他關鍵字。</p>
+        </div>
 
-        <a href="industry.xlsx" class="link-btn btn-industry">
-            開啟 Industry (產業資料)
-        </a>
-
-        <a href="news.xlsx" class="link-btn btn-news">
-            開啟 News (新聞資料)
-        </a>
-
-        <a href="reports.xlsx" class="link-btn btn-reports">
-            開啟 Reports (報告資料)
-        </a>
-
+        <div id="detailView" class="detail-view"></div>
     </div>
 
+    <script>
+        // --- 資料庫區域 (請在此貼上您的資料) ---
+        const database = {
+            reports: [
+                {
+                    "id": 1,
+                    "date": "2025/11/11",
+                    "company": "華碩",
+                    "code": "2357",
+                    "broker": "元大投顧",
+                    "analyst": "魏建發",
+                    "type": "Call Memo",
+                    "importance": "高",
+                    "industry": "PC/伺服器",
+                    "keyPoints": "3Q25創新高1899億，AI伺服器占比20%，展望正向。營益率提前達標。",
+                    "tags": ["AI伺服器", "PC", "業績創高"],
+                    "detail": {
+                        "營運重點": "3Q25財務表現(品牌):\n- 營收1,899.07億元, QoQ+9.1%/YoY+21.2%, 再創單季新高\n- 毛利率12.9%\n- 營益率4.4%, 提前回到4-5%目標",
+                        "策略方向": "三大市場均衡發展:\n商用市場(30%營收)、遊戲市場(41%營收)、消費市場(29%營收)。",
+                        "Rex大叔觀察": "華碩營運全面改善，AI伺服器雙引擎強勁，產品線競爭力優異，值得持續追蹤。"
+                    }
+                },
+                // 範例資料 2 (您可以複製格式增加更多)
+                {
+                    "id": 2,
+                    "date": "2025/11/10",
+                    "company": "台積電",
+                    "code": "2330",
+                    "broker": "摩根大通",
+                    "analyst": "Gokul Hariharan",
+                    "type": "Report",
+                    "importance": "高",
+                    "industry": "半導體",
+                    "keyPoints": "CoWoS產能擴充進度超前，先進製程市佔率穩固，2026年展望樂觀。",
+                    "tags": ["半導體", "CoWoS", "先進製程"],
+                    "detail": {
+                        "營運重點": "先進製程營收占比持續擴大，毛利率維持高檔。",
+                        "Rex大叔觀察": "護國神山地位不變，需留意地緣政治風險，長線多頭格局未變。"
+                    }
+                }
+                // 請在上方繼續貼上您的其他 38 筆資料...
+            ]
+        };
+        
+        // --- 程式邏輯區 ---
+        let allReports = database.reports;
+        let filteredReports = allReports;
+        
+        // 初始化：頁面載入時執行
+        window.onload = function() {
+            renderList();
+        };
+
+        // 渲染列表功能
+        function renderList() {
+            const listView = document.getElementById('listView');
+            const noResult = document.getElementById('noResult');
+            
+            listView.innerHTML = ''; // 清空列表
+            
+            if (filteredReports.length === 0) {
+                noResult.style.display = 'block';
+                return;
+            } else {
+                noResult.style.display = 'none';
+            }
+            
+            filteredReports.forEach(report => {
+                const card = document.createElement('div');
+                card.className = 'report-card';
+                card.onclick = () => showDetail(report.id);
+                
+                // 產生標籤 HTML
+                const tagsHtml = report.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+                const importanceHtml = report.importance === '高' ? `<span class="tag high">重要</span>` : '';
+                const industryHtml = `<span class="tag cat">${report.industry}</span>`;
+
+                card.innerHTML = `
+                    <div>
+                        <div class="card-top">
+                            <div class="company-info">
+                                <h3>${report.company} <span class="company-code">${report.code}</span></h3>
+                            </div>
+                            <div class="report-date">${report.date}</div>
+                        </div>
+                        <div class="analyst-info">${report.broker} · ${report.analyst}</div>
+                        <div class="summary">${report.keyPoints}</div>
+                    </div>
+                    <div class="tags">
+                        ${importanceHtml}
+                        ${industryHtml}
+                        ${tagsHtml}
+                    </div>
+                `;
+                
+                listView.appendChild(card);
+            });
+        }
+        
+        // 顯示詳細頁面
+        function showDetail(id) {
+            const report = allReports.find(r => r.id === id);
+            if (!report) return;
+            
+            // 切換視圖
+            document.getElementById('listView').style.display = 'none';
+            document.querySelector('.search-box').style.display = 'none'; // 隱藏搜尋框
+            document.getElementById('noResult').style.display = 'none';
+            
+            const detailView = document.getElementById('detailView');
+            detailView.classList.add('active');
+            window.scrollTo(0, 0); // 捲動到頂部
+            
+            // 組合詳細頁 HTML
+            let detailHTML = `
+                <button class="back-btn" onclick="showList()">← 返回列表</button>
+                
+                <div class="detail-header">
+                    <div class="detail-title">${report.company} ${report.code}</div>
+                    <div class="analyst-info" style="font-size:16px;">
+                        ${report.date} · ${report.broker} · ${report.analyst} · ${report.industry}
+                    </div>
+                    <div class="tags" style="margin-top:15px;">
+                        ${report.importance === '高' ? '<span class="tag high">高重要性</span>' : ''}
+                        ${report.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+            
+            // 動態產生各個段落
+            if (report.detail) {
+                for (let [key, value] of Object.entries(report.detail)) {
+                    detailHTML += `
+                        <div class="detail-section">
+                            <h3>${key}</h3>
+                            <div class="detail-content">${value}</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            detailView.innerHTML = detailHTML;
+        }
+        
+        // 返回列表
+        function showList() {
+            document.getElementById('listView').style.display = 'grid'; // 恢復 Grid 排版
+            document.querySelector('.search-box').style.display = 'block';
+            document.getElementById('detailView').classList.remove('active');
+            document.getElementById('detailView').innerHTML = ''; // 清空內容
+        }
+        
+        // 搜尋功能 (修復版)
+        function searchReports() {
+            const input = document.getElementById('searchInput');
+            const keyword = input.value.toLowerCase().trim();
+            
+            if (keyword === '') {
+                filteredReports = allReports;
+            } else {
+                filteredReports = allReports.filter(report => {
+                    // 搜尋範圍包含：公司名、代號、關鍵字、產業、分析師
+                    return (
+                        report.company.toLowerCase().includes(keyword) ||
+                        report.code.includes(keyword) ||
+                        report.keyPoints.toLowerCase().includes(keyword) ||
+                        report.industry.toLowerCase().includes(keyword) ||
+                        report.analyst.toLowerCase().includes(keyword) ||
+                        report.tags.some(tag => tag.toLowerCase().includes(keyword))
+                    );
+                });
+            }
+            renderList(); // 重新渲染
+        }
+    </script>
 </body>
 </html>
