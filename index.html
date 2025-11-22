@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rex大叔投資戰情室 v5.0</title>
+    <title>Rex大叔投資戰情室 v5.1 (完整版)</title>
     
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,42 +11,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* 全局字體設定：加深顏色，提升閱讀性 */
+        /* 全局字體設定 */
         body { background-color: #f8fafc; font-family: 'Noto Sans TC', sans-serif; color: #1e293b; }
         
-        /* 標題強調色 */
-        .text-heading { color: #0f172a; font-weight: 700; } /* 近乎純黑 */
-        .text-sub { color: #475569; font-weight: 500; } /* 深灰 */
-        .text-body { color: #334155; line-height: 1.6; } /* 本文深灰 */
-
-        /* 區塊切換動畫 */
+        /* 動畫與特效 */
         .section-view { display: none; animation: fadeIn 0.3s ease-in-out; }
         .section-view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 大卡片互動效果 */
-        .nav-card { 
-            transition: all 0.2s ease; 
-            border: 2px solid #e2e8f0;
-        }
-        .nav-card:hover { 
-            transform: translateY(-4px); 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            border-color: #94a3b8;
-        }
+        /* 導航卡片互動 */
+        .nav-card { transition: all 0.2s ease; border: 2px solid #e2e8f0; }
+        .nav-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #94a3b8; }
 
         /* 標籤樣式 */
-        .tag-pill { 
-            display: inline-block; 
-            padding: 2px 8px; 
-            border-radius: 4px; 
-            font-size: 0.8rem; 
-            font-weight: 600; 
-            margin-right: 4px; 
-            background-color: #f1f5f9; 
-            color: #475569; 
-            border: 1px solid #cbd5e1;
-        }
+        .tag-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; margin-right: 4px; margin-bottom: 4px; }
 
         /* 滾動條優化 */
         ::-webkit-scrollbar { width: 8px; }
@@ -54,19 +32,16 @@
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
         
-        /* 星星防爆框設定 */
-        .star-container {
-            white-space: nowrap; 
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-        }
+        /* 星星防爆框 */
+        .star-container { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <aside class="w-64 bg-slate-900 text-white flex-col hidden md:flex shadow-xl z-30">
-        <div class="p-6 border-b border-slate-800">
+    <div id="mobileOverlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+
+    <aside id="sidebar" class="w-64 bg-slate-900 text-white flex-col hidden md:flex shadow-xl z-50 transition-all duration-300 fixed inset-y-0 left-0 md:relative">
+        <div class="p-6 border-b border-slate-800 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center text-slate-900 font-bold text-xl shadow-lg">R</div>
                 <div>
@@ -74,6 +49,9 @@
                     <p class="text-xs text-gray-400 mt-1">168 智能戰情室</p>
                 </div>
             </div>
+            <button onclick="toggleMobileMenu()" class="md:hidden text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-2xl"></i>
+            </button>
         </div>
 
         <nav class="flex-1 py-4 space-y-1 overflow-y-auto">
@@ -103,16 +81,23 @@
 
     <main class="flex-1 flex flex-col h-screen overflow-hidden relative bg-slate-50">
         
-        <header class="h-16 bg-white shadow-sm flex justify-between items-center px-8 z-20 border-b border-gray-200">
-            <h2 class="text-xl font-bold text-slate-800 flex items-center gap-3" id="pageTitle">
-                <i class="fa-solid fa-chart-pie text-yellow-600"></i> 戰情總覽
-            </h2>
-            <div class="text-sm font-bold text-slate-600 bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
+        <header class="h-16 bg-white shadow-sm flex items-center px-4 md:px-8 z-20 border-b border-gray-200 justify-between">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleMobileMenu()" class="md:hidden text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-100">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                
+                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-3" id="pageTitle">
+                    <i class="fa-solid fa-chart-pie text-yellow-600"></i> 戰情總覽
+                </h2>
+            </div>
+
+            <div class="text-sm font-bold text-slate-600 bg-slate-100 px-4 py-2 rounded-full border border-slate-200 whitespace-nowrap">
                 <i class="fa-regular fa-calendar-check mr-2 text-slate-500"></i><span id="currentDate"></span>
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-6 md:p-10 custom-scroll" id="mainContainer">
+        <div class="flex-1 overflow-y-auto p-4 md:p-10 custom-scroll" id="mainContainer">
 
             <div id="view-home" class="section-view active">
                 <div class="mb-8">
@@ -120,36 +105,36 @@
                     <p class="text-slate-600 font-medium text-lg">請選擇您要分析的資料模組：</p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div onclick="showSection('industry')" class="nav-card bg-white p-8 rounded-2xl cursor-pointer group relative overflow-hidden">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div onclick="showSection('industry')" class="nav-card bg-white p-6 md:p-8 rounded-2xl cursor-pointer group relative overflow-hidden">
                         <div class="relative z-10 text-center">
-                            <div class="w-20 h-20 bg-blue-100 text-blue-700 rounded-2xl flex items-center justify-center text-4xl mb-6 mx-auto shadow-inner">
+                            <div class="w-16 h-16 md:w-20 md:h-20 bg-blue-100 text-blue-700 rounded-2xl flex items-center justify-center text-3xl md:text-4xl mb-6 mx-auto shadow-inner">
                                 <i class="fa-solid fa-city"></i>
                             </div>
                             <h3 class="text-2xl font-bold text-slate-900 mb-2">產業百科</h3>
-                            <p class="text-slate-600 font-medium">查詢公司產品、細產業分類與市場地位</p>
+                            <p class="text-slate-600 font-medium text-sm md:text-base">查詢公司產品、細產業分類與市場地位</p>
                             <div class="mt-6 text-blue-700 font-bold text-sm bg-blue-50 px-3 py-1 rounded-full inline-block" id="countInd">載入中...</div>
                         </div>
                     </div>
 
-                    <div onclick="showSection('reports')" class="nav-card bg-white p-8 rounded-2xl cursor-pointer group relative overflow-hidden">
+                    <div onclick="showSection('reports')" class="nav-card bg-white p-6 md:p-8 rounded-2xl cursor-pointer group relative overflow-hidden">
                         <div class="relative z-10 text-center">
-                            <div class="w-20 h-20 bg-yellow-100 text-yellow-700 rounded-2xl flex items-center justify-center text-4xl mb-6 mx-auto shadow-inner">
+                            <div class="w-16 h-16 md:w-20 md:h-20 bg-yellow-100 text-yellow-700 rounded-2xl flex items-center justify-center text-3xl md:text-4xl mb-6 mx-auto shadow-inner">
                                 <i class="fa-solid fa-file-invoice-dollar"></i>
                             </div>
                             <h3 class="text-2xl font-bold text-slate-900 mb-2">研究報告</h3>
-                            <p class="text-slate-600 font-medium">瀏覽個股深度分析、營運重點與評等</p>
+                            <p class="text-slate-600 font-medium text-sm md:text-base">瀏覽個股深度分析、營運重點與評等</p>
                             <div class="mt-6 text-yellow-700 font-bold text-sm bg-yellow-50 px-3 py-1 rounded-full inline-block" id="countRep">載入中...</div>
                         </div>
                     </div>
 
-                    <div onclick="showSection('news')" class="nav-card bg-white p-8 rounded-2xl cursor-pointer group relative overflow-hidden">
+                    <div onclick="showSection('news')" class="nav-card bg-white p-6 md:p-8 rounded-2xl cursor-pointer group relative overflow-hidden">
                         <div class="relative z-10 text-center">
-                            <div class="w-20 h-20 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-4xl mb-6 mx-auto shadow-inner">
+                            <div class="w-16 h-16 md:w-20 md:h-20 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-3xl md:text-4xl mb-6 mx-auto shadow-inner">
                                 <i class="fa-solid fa-bolt"></i>
                             </div>
                             <h3 class="text-2xl font-bold text-slate-900 mb-2">外資快訊</h3>
-                            <p class="text-slate-600 font-medium">掌握最新市場傳聞、外電與即時動態</p>
+                            <p class="text-slate-600 font-medium text-sm md:text-base">掌握最新市場傳聞、外電與即時動態</p>
                             <div class="mt-6 text-red-600 font-bold text-sm bg-red-50 px-3 py-1 rounded-full inline-block" id="countNews">載入中...</div>
                         </div>
                     </div>
@@ -157,9 +142,9 @@
             </div>
 
             <div id="view-industry" class="section-view">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6 sticky top-0 z-10">
-                    <div class="flex gap-4">
-                        <input type="text" id="searchIndustry" placeholder="輸入股號、公司名或產品關鍵字..." class="flex-1 p-3 border-2 border-gray-200 rounded-lg text-lg focus:border-blue-500 outline-none text-slate-800 font-medium placeholder-gray-400">
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 mb-6 sticky top-0 z-10">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <input type="search" id="searchIndustry" placeholder="輸入股號、公司名或產品關鍵字..." class="flex-1 p-3 border-2 border-gray-200 rounded-lg text-lg focus:border-blue-500 outline-none text-slate-800 font-medium placeholder-gray-400">
                         <select id="filterIndustryMain" class="p-3 border-2 border-gray-200 rounded-lg bg-white text-lg font-bold text-slate-700 min-w-[200px] cursor-pointer"><option value="">所有主產業</option></select>
                     </div>
                 </div>
@@ -168,9 +153,9 @@
             </div>
 
             <div id="view-reports" class="section-view">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6 sticky top-0 z-10">
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 mb-6 sticky top-0 z-10">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <input type="text" id="searchReport" placeholder="搜尋報告 (如: 台積電, 買進)..." class="col-span-2 p-3 border-2 border-gray-200 rounded-lg text-lg focus:border-yellow-500 outline-none text-slate-800 font-medium placeholder-gray-400">
+                        <input type="search" id="searchReport" placeholder="搜尋報告 (如: 台積電, 買進)..." class="col-span-1 md:col-span-2 p-3 border-2 border-gray-200 rounded-lg text-lg focus:border-yellow-500 outline-none text-slate-800 font-medium placeholder-gray-400">
                         <select id="filterReportInd" class="p-3 border-2 border-gray-200 rounded-lg bg-white font-bold text-slate-700 cursor-pointer"><option value="">所有產業</option></select>
                         <select id="filterReportRating" class="p-3 border-2 border-gray-200 rounded-lg bg-white font-bold text-slate-700 cursor-pointer"><option value="">所有評等</option></select>
                     </div>
@@ -180,14 +165,13 @@
             </div>
 
             <div id="view-news" class="section-view">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6 sticky top-0 z-10">
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 mb-6 sticky top-0 z-10">
                     <div class="relative">
                         <i class="fa-solid fa-search absolute left-4 top-4 text-gray-400"></i>
-                        <input type="text" id="searchNews" placeholder="搜尋新聞標題、內容..." class="w-full pl-12 p-3 border-2 border-gray-200 rounded-lg text-lg focus:border-red-500 outline-none text-slate-800 font-medium placeholder-gray-400">
+                        <input type="search" id="searchNews" placeholder="搜尋新聞標題、內容..." class="w-full pl-12 p-3 border-2 border-gray-200 rounded-lg text-lg focus:border-red-500 outline-none text-slate-800 font-medium placeholder-gray-400">
                     </div>
                 </div>
-                <div id="newsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    </div>
+                <div id="newsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 <div id="newsPagination" class="flex justify-center mt-8 gap-2"></div>
             </div>
 
@@ -200,11 +184,11 @@
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl border-t-8 border-slate-800 overflow-hidden">
                     
-                    <div class="bg-slate-50 px-8 py-6 border-b border-slate-200 flex justify-between items-start">
+                    <div class="bg-slate-50 px-6 md:px-8 py-6 border-b border-slate-200 flex justify-between items-start">
                         <div>
                             <span class="text-sm font-bold tracking-wider uppercase mb-2 block px-3 py-1 rounded w-fit" id="mCategory">類別</span>
-                            <h3 class="text-3xl font-bold text-slate-900 mb-3 leading-tight" id="mTitle">標題</h3>
-                            <div class="flex items-center gap-4 text-slate-600 font-medium">
+                            <h3 class="text-2xl md:text-3xl font-bold text-slate-900 mb-3 leading-tight" id="mTitle">標題</h3>
+                            <div class="flex flex-wrap items-center gap-4 text-slate-600 font-medium">
                                 <span id="mSubtitle1" class="bg-white border border-slate-300 px-3 py-1 rounded-md shadow-sm">--</span>
                                 <span id="mSubtitle2" class="text-slate-500">--</span>
                             </div>
@@ -214,9 +198,8 @@
                         </button>
                     </div>
 
-                    <div class="px-8 py-8 max-h-[65vh] overflow-y-auto custom-scroll bg-white">
-                        <div id="mContent" class="space-y-8">
-                            </div>
+                    <div class="px-6 md:px-8 py-8 max-h-[65vh] overflow-y-auto custom-scroll bg-white">
+                        <div id="mContent" class="space-y-8"></div>
                     </div>
 
                     <div class="bg-slate-100 px-8 py-4 border-t border-slate-200 text-right">
@@ -228,8 +211,7 @@
     </div>
 
     <script>
-        // === 檔案設定 ===
-        // 確保檔名與您的檔案完全一致
+        // === 檔案設定 (對應新檔案) ===
         const FILES = { 
             ind: 'industry.xlsx', 
             rep: 'reports.xlsx', 
@@ -265,7 +247,7 @@
             });
         }
 
-        // === 資料讀取核心 ===
+        // === 資料讀取核心 (針對新檔案優化) ===
         async function loadData() {
             const status = document.getElementById('dbStatus');
             try {
@@ -285,27 +267,24 @@
                 DB.reports = XLSX.utils.sheet_to_json(wbRep.Sheets[wbRep.SheetNames[0]]).map(r => {
                     let stockId = r['股號'] ? r['股號'].toString().trim() : '';
                     // 自動修復產業
-                    if(stockId && DB.indMap[stockId]) {
+                    if(!r['產業'] && stockId && DB.indMap[stockId]) {
                         r['產業'] = DB.indMap[stockId]['產業'];
                     }
                     return r;
                 });
 
-                // 3. 讀取 News (重點修復)
-                try {
-                    const bufNews = await fetch(FILES.news).then(r => {
-                        if(!r.ok) throw new Error("News file missing");
-                        return r.arrayBuffer();
-                    });
-                    const wbNews = XLSX.read(bufNews);
-                    // 讀取第一個工作表
-                    const sheetNews = wbNews.Sheets[wbNews.SheetNames[0]];
-                    DB.news = XLSX.utils.sheet_to_json(sheetNews);
-                    console.log("News loaded:", DB.news.length, DB.news[0]); // Debug用
-                } catch (e) {
-                    console.warn("News 讀取異常:", e);
-                    DB.news = [];
-                }
+                // 3. 讀取 News (自動生成標題)
+                const bufNews = await fetch(FILES.news).then(r => r.arrayBuffer());
+                const wbNews = XLSX.read(bufNews);
+                DB.news = XLSX.utils.sheet_to_json(wbNews.Sheets[wbNews.SheetNames[0]]).map(n => {
+                    if(!n['標題'] && !n['Title']) {
+                        const broker = n['券商來源'] || '外資';
+                        const company = n['公司'] || '';
+                        const focus = n['報導重點分類'] || '市場快訊';
+                        n['標題'] = `【${broker}】${company} - ${focus}`;
+                    }
+                    return n;
+                });
 
                 // 狀態更新
                 status.textContent = "資料庫連線正常";
@@ -321,7 +300,6 @@
                 console.error(e);
                 status.textContent = "讀取失敗";
                 status.classList.replace('text-yellow-500', 'text-red-500');
-                alert("無法讀取 Excel 檔案，請確認檔案是否已上傳至 GitHub。");
             }
         }
 
@@ -363,6 +341,14 @@
             if(id === 'news') renderNews();
             
             document.getElementById('mainContainer').scrollTo(0,0);
+            
+            // 手機版自動關閉選單
+            if(window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('mobileOverlay');
+                if(sidebar) sidebar.classList.add('hidden');
+                if(overlay) overlay.classList.add('hidden');
+            }
         }
 
         // === 列表渲染器 ===
@@ -385,14 +371,16 @@
             renderPagination(paginationId, data.length);
         }
 
-        // === 1. 產業百科渲染 ===
+        // 1. 產業百科
         function renderIndustry() {
             const key = document.getElementById('searchIndustry').value.toLowerCase();
             const cat = document.getElementById('filterIndustryMain').value;
+            
             const filtered = DB.industry.filter(item => {
                 const str = Object.values(item).join(' ').toLowerCase();
                 return str.includes(key) && (cat === '' || item['產業'] === cat);
             });
+
             renderList('industryList', filtered, (item) => `
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:border-blue-400 hover:shadow-md transition cursor-pointer" onclick="openModal('industry', this.dataset.json)" data-json='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
                     <div class="flex items-center justify-between">
@@ -404,7 +392,7 @@
                             </div>
                         </div>
                         <div class="hidden md:block text-right">
-                            <div class="text-sm text-gray-500 font-bold">細產業分類</div>
+                            <div class="text-sm text-gray-500 font-bold">細產業</div>
                             <div class="text-slate-700 font-medium text-lg">${item['細產業'] || '--'}</div>
                         </div>
                     </div>
@@ -415,30 +403,31 @@
             `, 'industryPagination');
         }
 
-        // === 2. 研究報告渲染 ===
+        // 2. 研究報告
         function renderReports() {
             const key = document.getElementById('searchReport').value.toLowerCase();
             const ind = document.getElementById('filterReportInd').value;
             const rate = document.getElementById('filterReportRating').value;
 
             const filtered = DB.reports.filter(item => {
-                const str = (item['公司'] + item['股號'] + item['精簡重點摘要']).toLowerCase();
+                // 優化：搜尋標籤和Rex觀察
+                const str = (item['公司'] + item['股號'] + item['精簡重點摘要'] + (item['標籤']||'') + (item['Rex觀察']||'')).toLowerCase();
                 return str.includes(key) && (ind === '' || item['產業'] === ind) && (rate === '' || item['投資評等'] === rate);
             });
 
             renderList('reportsList', filtered, (item) => {
                 let rateColor = 'bg-gray-100 text-gray-600';
-                if(item['投資評等']?.includes('買') || item['投資評等']?.includes('Buy')) rateColor = 'bg-red-100 text-red-700 border border-red-200';
+                if(item['投資評等']?.includes('買') || item['投資評等']?.includes('Buy') || item['投資評等']?.includes('Overweight')) {
+                    rateColor = 'bg-red-100 text-red-700 border border-red-200';
+                }
                 
-                // 星星處理：防止溢出
                 let stars = item['重要性'] || '⭐⭐';
-                // 如果星星太多，截斷顯示
                 if(stars.length > 5) stars = '⭐⭐⭐⭐⭐'; 
 
                 return `
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition cursor-pointer flex flex-col h-full" onclick="openModal('report', this.dataset.json)" data-json='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
                     <div class="flex justify-between items-start mb-3">
-                        <span class="text-xs font-bold bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${item['產業']}</span>
+                        <span class="text-xs font-bold bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${item['產業'] || '個股'}</span>
                         <span class="text-sm font-bold text-slate-400 font-mono">${item['報告日期']}</span>
                     </div>
                     <h3 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
@@ -446,7 +435,7 @@
                     </h3>
                     
                     <div class="flex flex-wrap items-center gap-2 mb-4 text-sm">
-                        <span class="text-yellow-500 text-lg star-container" title="${stars}">${stars}</span>
+                        <span class="text-yellow-500 text-lg star-container">${stars}</span>
                         <span class="text-gray-300">|</span>
                         <span class="font-bold text-slate-600 truncate max-w-[100px]">${item['券商']}</span>
                         <span class="ml-auto px-3 py-0.5 rounded font-bold text-xs ${rateColor}">${item['投資評等'] || 'N/A'}</span>
@@ -466,36 +455,38 @@
             }, 'reportsPagination');
         }
 
-        // === 3. 外資快訊渲染 (修復重點) ===
+        // 3. 外資快訊
         function renderNews() {
             const key = document.getElementById('searchNews').value.toLowerCase();
+            
             const filtered = DB.news.filter(item => {
-                // 針對 CSV 欄位做容錯搜尋
-                const title = item['標題'] || item['Title'] || '';
-                const content = item['內容'] || item['Content'] || '';
-                const tag = item['標籤'] || item['Tag'] || '';
-                return (title+content+tag).toLowerCase().includes(key);
+                const content = (item['標題'] + item['完整報導內容'] + (item['標籤']||'')).toLowerCase();
+                return content.includes(key);
             });
 
             renderList('newsList', filtered, (item) => {
-                // 欄位對應 (Mapping)
-                const title = item['標題'] || item['Title'] || '無標題';
-                const date = item['日期'] || item['Date'] || '--';
-                const content = item['內容'] || item['Content'] || '無內容';
-                const tags = item['標籤'] ? item['標籤'].split(' ').map(t=>`<span class="tag-pill">${t}</span>`).join('') : '';
-                const source = item['來源'] || '市場消息';
+                const title = item['標題']; 
+                const date = item['日期'] || '--';
+                const content = item['完整報導內容'] || '無內容';
+                
+                let tagHtml = '';
+                if(item['標籤']) {
+                    tagHtml = item['標籤'].split(' ').map(t => 
+                        `<span class="tag-pill bg-red-50 text-red-600 border border-red-100">${t.replace('#','')}</span>`
+                    ).join('');
+                }
 
                 return `
                 <div class="bg-white p-6 rounded-xl border border-gray-200 hover:border-red-300 hover:shadow-md transition cursor-pointer group" onclick="openModal('news', this.dataset.json)" data-json='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
                     <div class="flex flex-col md:flex-row gap-4">
                         <div class="w-32 flex-shrink-0">
                             <div class="text-sm font-bold text-gray-400 font-mono mb-1">${date}</div>
-                            <div class="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded inline-block">${source}</div>
+                            <div class="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded inline-block">${item['券商來源'] || '快訊'}</div>
                         </div>
                         <div class="flex-1">
                             <h4 class="text-xl font-bold text-slate-900 mb-2 group-hover:text-red-600 transition">${title}</h4>
                             <p class="text-slate-600 text-base line-clamp-2 mb-3">${content}</p>
-                            <div class="flex flex-wrap gap-2">${tags}</div>
+                            <div class="flex flex-wrap gap-2">${tagHtml}</div>
                         </div>
                         <div class="flex items-center justify-center">
                             <i class="fa-solid fa-chevron-right text-gray-300 text-xl group-hover:text-red-400"></i>
@@ -524,7 +515,7 @@
             document.getElementById('mainContainer').scrollTo({top: 0, behavior: 'smooth'});
         }
 
-        // === Modal 詳細頁 (高對比文字) ===
+        // === Modal 詳細頁 (增強版) ===
         function openModal(type, jsonStr) {
             const item = JSON.parse(jsonStr);
             const modal = document.getElementById('detailModal');
@@ -544,34 +535,45 @@
                 domSub1.innerText = item['券商'];
                 domSub2.innerText = item['報告日期'];
 
-                // 報告詳細內容
+                // 報告上方數據卡
                 html += `<div class="grid grid-cols-3 gap-4 mb-8">
                     <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 text-center"><div class="text-xs text-gray-500 font-bold">評等</div><div class="text-xl font-bold text-slate-900">${item['投資評等']}</div></div>
                     <div class="p-4 bg-green-50 rounded-lg border border-green-200 text-center"><div class="text-xs text-green-700 font-bold">目標價</div><div class="text-xl font-bold text-green-700">${item['目標價']}</div></div>
-                    <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-center"><div class="text-xs text-yellow-700 font-bold">重要性</div><div class="text-xl text-yellow-500 overflow-hidden whitespace-nowrap">${item['重要性']}</div></div>
+                    <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-center"><div class="text-xs text-yellow-700 font-bold">重要性</div><div class="text-xl text-yellow-500 overflow-hidden whitespace-nowrap">${item['重要性'] || '⭐⭐'}</div></div>
                 </div>`;
                 
                 const makeSection = (title, text, color='blue') => {
                     if(!text) return '';
                     return `<div class="mb-8">
                         <h4 class="text-lg font-bold text-slate-900 mb-3 border-l-4 border-${color}-500 pl-3">${title}</h4>
-                        <div class="text-body text-lg text-slate-700 bg-gray-50 p-5 rounded-xl border border-gray-200">${text.replace(/\n/g, '<br>')}</div>
+                        <div class="text-body text-lg text-slate-700 bg-gray-50 p-5 rounded-xl border border-gray-200 leading-relaxed whitespace-pre-line">${text}</div>
                     </div>`;
                 };
 
                 html += makeSection('精簡重點摘要', item['精簡重點摘要'], 'blue');
+                
+                // 注入財務數據
+                if (item['關鍵財務數據']) {
+                    html += `<div class="mb-8">
+                        <h4 class="text-lg font-bold text-slate-900 mb-3 border-l-4 border-purple-500 pl-3">關鍵財務數據</h4>
+                        <div class="text-lg text-slate-800 bg-purple-50 p-5 rounded-xl border border-purple-100 font-mono leading-relaxed whitespace-pre-line">
+                            ${item['關鍵財務數據']}
+                        </div>
+                    </div>`;
+                }
+
                 html += makeSection('營運重點', item['營運重點'], 'green');
                 html += makeSection('Rex 大叔觀察', item['Rex觀察'], 'yellow');
 
             } else if(type === 'news') {
                 domCat.innerText = "外資市場快訊";
                 domCat.className = "text-sm font-bold uppercase mb-2 block px-3 py-1 rounded w-fit bg-red-100 text-red-800";
-                domTitle.innerText = item['標題'] || item['Title'];
-                domSub1.innerText = item['來源'] || '市場';
-                domSub2.innerText = item['日期'] || item['Date'];
+                domTitle.innerText = item['標題'];
+                domSub1.innerText = item['券商來源'] || '市場消息';
+                domSub2.innerText = item['日期'];
 
-                const content = item['內容'] || item['Content'] || '';
-                html += `<div class="text-lg text-slate-800 leading-loose whitespace-pre-line font-medium">${content}</div>`;
+                const content = item['完整報導內容'] || '';
+                html += `<div class="text-lg text-slate-800 leading-loose whitespace-pre-line font-medium bg-white p-2">${content}</div>`;
                 
                 if(item['標籤']) {
                     html += `<div class="mt-8 pt-4 border-t border-gray-200 flex gap-2">
@@ -600,6 +602,22 @@
 
         function closeModal() {
             document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        // 手機版選單控制
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            
+            if (sidebar.classList.contains('hidden')) {
+                sidebar.classList.remove('hidden');
+                sidebar.classList.add('flex');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('hidden');
+                sidebar.classList.remove('flex');
+                overlay.classList.add('hidden');
+            }
         }
     </script>
 </body>
